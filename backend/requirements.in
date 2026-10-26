@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic>=2,<3
+pydantic-settings>=2,<3
+langchain-core
+langchain-deepseek
+httpx
+pytest
+pytest-asyncio
+pytest-cov

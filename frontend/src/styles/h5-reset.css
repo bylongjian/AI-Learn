@@ -1,0 +1,2 @@
+/* WXSS rejects the universal selector. Preserve the prototype's browser reset. */
+* { box-sizing: border-box; }

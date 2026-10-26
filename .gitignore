@@ -27,3 +27,7 @@ prototype/.qa/
 Thumbs.db
 Desktop.ini
 .idea/
+.worktrees/
+.cache/
+.coverage
+htmlcov/
