@@ -57,27 +57,11 @@ AI 只生成三条总结、1–5 条建议和一句鼓励，不能修改统计�
 ## 验证
 
 ```powershell
-./.venv/Scripts/python.exe -m pytest --cov=app --cov-branch --cov-report=term-missing
+./.venv/Scripts/python.exe -m pytest -q --tb=short
+./.venv/Scripts/python.exe -m pip check
 ```
 
-普通测试只在外部模型边界使用替身，并通过 `httpx.MockTransport` 测试真实 `ChatDeepSeek` HTTP 序列化、解析、上游错误和重试；不会调用付费接口。
-`TDD.md` 保存测试先失败再通过的证据。
-
-真实验收需自行配置 Key 并主动执行，预计最多 20 个业务生成请求（重试可能增加模型调用）：
-
-```powershell
-./.venv/Scripts/python.exe scripts/live_acceptance.py --run-live
-```
-
-脚本在进程内启动同一个 FastAPI 应用，对 10 组不同主题、数量与难度调用真实模型，逐组生成报告并检查结构、统计和 50 秒验收界限。
-未传 `--run-live` 或 Key 为空时退出且不发送请求。当前实现使用 45 秒总预算，包含全部重试。
-每组 quiz/report 的开始、结果、耗时和安全结构元数据逐条写入 `.qa/live-progress.jsonl`；可用 `--progress-log` 指定日志路径。
-HTTP、JSON、schema、统计或超时失败都会记录固定原因和失败阶段后停止。schema 日志仅保留固定错误类型，未知类型统一归类；不记录字段路径、未知键、错误消息或输入。
-
-2026-10-25 已完成真实 DeepSeek 验收：10 组出题、10 份报告全部通过，覆盖 3/4/5 题与 easy/medium/hard/mixed；
-出题耗时 2.687–4.859 秒，报告 2.016–2.828 秒。非 mixed 每题难度一致、题型数量、严格 JSON/schema、报告统计均通过。
-安全进度记录为 `.qa/live-verified-progress.jsonl`，摘要为 `.qa/live-summary.json`。该批次验证结构和流程，未逐题进行独立教学事实审计。
-原有 AI 功能的 193 项测试保留通过。加入用户系统后，261 项测试通过，应用语句/分支覆盖率 98%；`pip check` 通过。详细 RED/GREEN 与真实诊断证据见 `TDD.md`。
+当前核心回归为 122 项通过，覆盖 AI 生成、确定性计分、JWT/微信登录、账号隔离及 MySQL 幂等结算。测试替换外部模型和微信 HTTPS 边界，不调用付费接口；MySQL 仓储使用真实独立测试库，配置与安全规则见下文。
 
 ## 用户、登录和云端练习
 
@@ -121,11 +105,6 @@ HTTP、JSON、schema、统计或超时失败都会记录固定原因和失败阶
 用户仓储和端到端 API 测试要求真实 MySQL，不使用 SQLite 或替代仓储。新建独立测试数据库（名称必须以 `_test` 结尾）与专用账号，将配置放在被 Git 忽略的 `.env.test`；不能复制应用数据库名称。建议 `APP_ENV=test`、`DEV_LOGIN_ENABLED=false`，测试会在专用测试应用内显式启用开发身份。测试数据清理仅针对该独立数据库。
 
 测试账号需有独立测试数据库的建表、读写与 ALTER 权限；回滚测试通过临时 CHECK 约束使真实报告写入失败，并在 `finally` 中移除，不修改 MySQL 全局设置。测试依旧只替换外部模型或微信 HTTPS 边界，不访问付费模型。
-
-```powershell
-./.venv/Scripts/python.exe -m pytest --cov=app --cov-branch --cov-report=term-missing
-./.venv/Scripts/python.exe -m pip check
-```
 
 ## MVP 范围与限制
 
