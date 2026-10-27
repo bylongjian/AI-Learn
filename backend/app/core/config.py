@@ -1,10 +1,22 @@
-from pydantic import Field, SecretStr, field_validator
+from typing import Literal
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
     deepseek_api_key: SecretStr | None = None
+    app_env: Literal["development", "test", "production"] = "development"
+    dev_login_enabled: bool = False
+    mysql_host: str = "127.0.0.1"
+    mysql_port: int = Field(default=3306, ge=1, le=65535)
+    mysql_user: str | None = None
+    mysql_password: SecretStr | None = None
+    mysql_database: str | None = None
+    jwt_secret: SecretStr | None = None
+    jwt_expire_seconds: int = Field(default=604800, ge=60, le=2592000)
+    wechat_app_id: str | None = None
+    wechat_app_secret: SecretStr | None = None
     deepseek_model: str = "deepseek-flash"
     deepseek_base_url: str = "https://api.deepseek.com"
     generation_timeout_seconds: float = Field(default=45, gt=0, le=45)
@@ -15,6 +27,12 @@ class Settings(BaseSettings):
     max_body_bytes: int = Field(default=65536, ge=1, le=1048576)
     cors_origins: list[str] = ["http://localhost:10086", "http://127.0.0.1:10086"]
     blocked_terms: list[str] = ["儿童色情", "炸弹制作教程"]
+
+    @model_validator(mode="after")
+    def validate_development_login(self):
+        if self.dev_login_enabled and self.app_env != "development":
+            raise ValueError("Development login is allowed only in development")
+        return self
 
     @field_validator("deepseek_base_url")
     @classmethod

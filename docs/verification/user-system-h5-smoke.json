@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-26",
+  "target": "main workspace H5 build at 127.0.0.1:10086",
+  "backend": "main workspace FastAPI with real MySQL",
+  "identity": "explicit local development test accounts",
+  "account_b": {"xp": 40, "completed": 1, "accuracy": 80},
+  "profile_reload_persisted": true,
+  "home_profile_and_recent_report": true,
+  "cloud_report_restored_without_prior_local_report": true,
+  "report_returns_to_original_entry": true,
+  "cloud_library": {"all": 1, "pending": 0, "completed": 1},
+  "search_no_match_empty_result": true,
+  "pending_filter_empty_result": true,
+  "account_a": {"xp": 0, "completed": 0, "cloud_quizzes": 0},
+  "account_switch_no_cross_account_records": true,
+  "switch_back_to_b_restores_stats": true,
+  "browser_errors": [],
+  "real_wechat_identity_tested": false
+}

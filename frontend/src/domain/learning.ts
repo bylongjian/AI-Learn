@@ -117,7 +117,8 @@ function isSession(s: unknown): s is Session {
   if (Object.keys(session.records).some(id => !session.quiz.questions.some(q => q.id === id))) return false
   for (let i = 0; i < session.quiz.questions.length; i++) {
     const q = session.quiz.questions[i]; const r = getAnswerRecord(session, q.id)
-    if (r !== undefined && (!object(r) || r.question_id !== q.id || !validSelection(q, r.selected_answers) ||
+    const canonicalBlank = session.status === 'completed' && session.report_status === 'ready' && Array.isArray(r?.selected_answers) && r.selected_answers.length === 0
+    if (r !== undefined && (!object(r) || r.question_id !== q.id || (!validSelection(q, r.selected_answers) && !canonicalBlank) ||
       r.is_correct !== isCorrect(q, r.selected_answers) || !Number.isInteger(r.duration_ms) || r.duration_ms < 0)) return false
     if ((i < session.current_index && !r) || (i > session.current_index && r)) return false
   }

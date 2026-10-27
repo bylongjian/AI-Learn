@@ -5,6 +5,9 @@ pydantic-settings>=2,<3
 langchain-core
 langchain-deepseek
 httpx
+aiomysql>=0.3,<0.4
+PyJWT>=2.10,<3
+PyMySQL[rsa]>=1.1,<2
 pytest
 pytest-asyncio
 pytest-cov

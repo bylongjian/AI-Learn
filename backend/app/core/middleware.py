@@ -6,21 +6,25 @@ from app.core.responses import error_response
 
 logger = logging.getLogger(__name__)
 GENERATION_PATHS = {"/api/v1/quiz/generate", "/api/v1/report/generate"}
+LOGIN_PATHS = {"/api/v1/user/login", "/api/v1/user/dev-login"}
 
 
 class RequestGuardMiddleware:
     def __init__(self, app: ASGIApp, settings: Settings):
         self.app, self.settings = app, settings
         self.limiter = RateLimiter(settings.rate_limit_requests, settings.rate_limit_window_seconds, settings.rate_limit_max_clients)
+        self.login_limiter = RateLimiter(30, 60, settings.rate_limit_max_clients)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
-        if scope["method"] == "POST":
-            if scope["path"] in GENERATION_PATHS:
+        if scope["method"] in {"POST", "PUT"}:
+            login_path = scope["path"] in LOGIN_PATHS and (scope["path"] != "/api/v1/user/dev-login" or self.settings.dev_login_enabled)
+            limiter = self.limiter if scope["path"] in GENERATION_PATHS else self.login_limiter if login_path else None
+            if limiter is not None:
                 ip = scope["client"][0] if scope.get("client") else "unknown"
-                if not self.limiter.allow(ip):
+                if not limiter.allow(ip):
                     await error_response(42901, "请求较多，请稍后重试", 429)(scope, receive, send)
                     return
             body = bytearray()

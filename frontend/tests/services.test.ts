@@ -70,3 +70,21 @@ test('设备写入从失败恢复成功后清除过期告警', () => {
   assert.equal(store.getSnapshot().storageFailed, false)
   assert.equal(store.getSnapshot().notice, '')
 })
+
+test('游客和不同账号分别恢复草稿，切回游客保留原记录', () => {
+  const values = new Map<string, unknown>()
+  const store = storeModule.createLearningStore({ read: (scope = 'guest') => values.get(scope), write: (value: unknown, scope = 'guest') => values.set(scope, structuredClone(value)) })
+  store.setDraft('原游客草稿'); store.activateScope('1'); assert.equal(store.getSnapshot().saved.draft, '')
+  store.setDraft('账号一'); store.activateScope('2'); store.setDraft('账号二')
+  store.activateScope('1'); assert.equal(store.getSnapshot().saved.draft, '账号一')
+  store.activateScope(null); assert.equal(store.getSnapshot().saved.draft, '原游客草稿')
+})
+
+test('报告失败后的旧账号回调不能将作答写入游客缓存', async () => {
+  const learning = await import('../src/domain/learning.ts')
+  const store = storeModule.createLearningStore({ read: () => undefined, write: () => {} })
+  store.activateScope('1'); const scope = store.getScope()
+  store.activateScope(null)
+  assert.equal(store.saveSession(learning.createSession(quizFixture()), scope), false)
+  assert.equal(store.getSnapshot().saved.sessions.length, 0)
+})

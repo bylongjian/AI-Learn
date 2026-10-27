@@ -2,6 +2,7 @@ import { defineConfig, type UserConfigExport } from '@tarojs/cli'
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 import devConfig from './dev'
 import prodConfig from './prod'
+import MiniRuntimeRafGuard from './mini-raf-provider'
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'webpack5'>(async (merge) => {
@@ -22,6 +23,7 @@ export default defineConfig<'webpack5'>(async (merge) => {
     ],
     defineConstants: {
       API_BASE_URL: JSON.stringify(process.env.TARO_APP_API_BASE_URL || 'http://127.0.0.1:8000'),
+      LOCAL_DEV_LOGIN: JSON.stringify(process.env.TARO_APP_DEV_LOGIN === 'true'),
     },
     copy: {
       patterns: [
@@ -52,6 +54,7 @@ export default defineConfig<'webpack5'>(async (merge) => {
       },
       webpackChain(chain) {
         chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
+        if (process.env.TARO_ENV === 'weapp') chain.plugin('mini-runtime-raf-guard').use(MiniRuntimeRafGuard)
       }
     },
     h5: {

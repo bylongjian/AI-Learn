@@ -1,0 +1,18 @@
+{
+  "quiz_id": "c7930de2-7e38-416a-9ade-f270070ca077",
+  "title": "Python 函数默认参数与列表基础",
+  "questions": 5,
+  "correct": 4,
+  "accuracy": 80,
+  "xp": 40,
+  "report_replay_identical": true,
+  "conflicting_replay_status": 409,
+  "other_user_read_status": 404,
+  "other_user_report_status": 404,
+  "second_client_detail_matches": true,
+  "paged_search_passed": true,
+  "elapsed_seconds": 9.22,
+  "identity": "local development test B",
+  "ai": "real configured provider",
+  "storage": "real MySQL"
+}

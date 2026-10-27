@@ -214,10 +214,40 @@ TOTAL                        430      0     92      0   100%
 
 `.venv/Scripts/python.exe -m pip check` → `No broken requirements found.` The successful real ten-group evidence from Cycle 9 is preserved; this diagnostic-only increment used no paid requests and did not touch `.env`, frontend or root files.
 
+## Cycle 11 — user identity and real MySQL persistence (2026-10-26)
+
+Read the Superpowers TDD skill and testing anti-patterns first. Current official Context7 documentation was fetched for aiomysql pool/transactions/cleanup, PyJWT required claims and fixed algorithms, FastAPI optional bearer/lifespan, WeChat code2Session, and HTTPX custom async transports. New tests exercise real MySQL 8.0.46 with an independent `*_test` database and dedicated database account; external HTTPS/model calls alone are substituted.
+
+Observed RED before each production increment:
+
+- `pytest tests/test_identity.py -q`: **14 failed**, settings absent, production flag accepted, and JWT module missing. GREEN: **14 passed**; an HS384 rejection-test key warning was removed by using a sufficiently long test key.
+- `pytest tests/test_user_repository.py -q --tb=short`: **8 failed**, explicit assertions for the missing storage implementation (after moving missing-feature assertions out of fixture setup). GREEN: **8 passed** against real MySQL, including concurrent 12-way openid upsert, 10-way result replay, ownership, full 4000-character titles, parameterized Unicode profiles, history, weighted half-up statistics and rollback.
+- `pytest tests/test_user_api.py -q`: **15 failed / 3 passed** before routes, persistence and PUT middleware. After adding response identity headers and simultaneous submission requirements, RED was **17 failed / 3 passed**. Existing disabled-route cases already passed as 404. GREEN covered mandatory/optional auth, stable a/b development accounts, profile validation, separate login quota, CORS/body size, stored original questions, ownership, canonical reports, conflict rejection, exact-once XP, and guest independence under DB outage.
+- `pytest tests/test_wechat_login.py -q`: **12 failed**, missing exchange provider. GREEN: **12 passed**, including safe upstream errors, malformed JSON/HTTP/timeouts, no retries, and no AppSecret/session_key/code in captured DEBUG logs. A wire transport adds private query parameters below HTTPX's sanitized request logging boundary.
+- `pytest tests/test_wechat_login.py::test_unconfigured_provider_creates_no_network_transport -q`: **1 failed**, transport was eagerly created. GREEN after deferring its construction until the first exchange. This also avoids TLS/resource setup for guest-only apps.
+- Expanded WeChat boundary RED: **4 failed / 13 passed**, missing/blank session_key, control-character openid and lack of a total deadline. GREEN adds a five-second whole-exchange deadline in addition to per-phase timeouts.
+- Login configuration/hidden-route RED: **2 failed / 1 passed**, absent JWT configuration consumed a one-use code and a disabled developer endpoint returned 422 for malformed input. GREEN rejects before exchanging code and does not register the disabled route at all. The already-passing third test connects the real HTTPX exchange boundary to concurrent real-MySQL login.
+
+The first rollback fault attempt used a test-only MySQL trigger; local binary logging rejected trigger creation despite schema-level privileges. No global settings or grants were changed. The final test adds a temporary CHECK on the empty test `reports` table, allowing the real answer insert and rejecting the subsequent report insert. After the exception, both answer/report rows are absent and XP is unchanged. The CHECK is removed in `finally`.
+
+The profile statistic test uses a completed 3-question quiz and a completed 5-question quiz: five correct answers out of eight yields **63%**, proving both weighted aggregation and half-up rounding. Conflicting repeated selections cannot overwrite the saved result. Same-process concurrent report requests call the narrative model once; independent transactions still arbitrate final result/XP through MySQL row locks and uniqueness without holding database locks during model calls.
+
+Full verification: `.venv/Scripts/python.exe -m pytest --cov=app --cov-branch --cov-report=term-missing -q --tb=short` → **256 passed in 21.10s**, **98%** application statement/branch coverage, no warnings. This includes all original **193** tests. `.venv/Scripts/python.exe -m pip check` → `No broken requirements found.` Every prior dependency pin was checked unchanged; added pins cover aiomysql, PyJWT, PyMySQL and its RSA dependencies. The initializer ran successfully against the app database and is separately exercised repeatedly against the test database; tests never clear the app database. No paid model calls, secret-file changes, Git staging/commits/push or deployment occurred in this increment.
+
+## Cycle 12 — transaction cancellation and existing-schema index upgrade
+
+Independent review identified two concrete quality defects. Current aiomysql documentation and implementation confirm that cancelling a query can close the connection before transaction cleanup runs.
+
+Cancellation RED: `pytest tests/test_user_repository.py -q -k 'cancelled_mysql or closed_connection or disconnected_rollback' --tb=short` → **3 failed**. A real transaction updates XP and executes `SELECT SLEEP(2)`; cancelling its task after 50ms incorrectly produced a storage AppError instead of a cancelled task. Closing a real connection explicitly, or terminating another connection owned by the same test account via `KILL CONNECTION`, also let failed rollback mask the original ValueError. Cleanup now skips an already-closed connection, attempts rollback otherwise, and discards the connection if rollback fails while rethrowing the original exception/cancellation. GREEN including the existing atomic-write rollback test: **4 passed**. The cancelled write remains uncommitted and XP is unchanged.
+
+Index RED: `pytest tests/test_user_repository.py -q -k 'user_leading or upgrades_existing' --tb=short` → **2 failed**, no `user_id`-leading index in `answer_records`, including after running the initializer against already-created tables. Fresh SQL now declares `answer_user(user_id)`, and initialization checks the database's index metadata and adds the index to existing schemas when missing. The migration test removes this index from populated test tables, initializes twice, verifies the index, and proves the canonical report and XP survive unchanged. Focused GREEN: **13 repository tests passed**. Tests and diagnostics use only the dedicated test database; root applies the app database migration separately.
+
+Final full command: `.venv/Scripts/python.exe -m pytest --cov=app --cov-branch --cov-report=term-missing -q --tb=short` → **261 passed in 37.07s**, **98%** application statement/branch coverage, no warnings. `pip check` and backend `git diff --check` pass. No global MySQL settings, account grants, secret files, frontend/root files, or Git index were changed.
+
 ## Practical limits
 
 - Real DeepSeek access, structure, workflow, report statistics and live latency passed the ten-group acceptance above. The generated questions have not received an independent teaching-fact audit; account pricing and usage costs were not examined.
-- Statistical authority is relative to the complete questions submitted by the client. Without a database or signed quiz storage this MVP cannot establish that a client has not edited those questions; it is not a tamper-proof grading service.
+- Authenticated statistics use the owner's stored original quiz and reject modified questions. Guest statistics remain relative to the complete questions submitted by the client.
 - The limiter is bounded and process-local. Run one worker for this MVP; multiple workers/instances do not share counters.
 - Content checks use configurable exact terms plus model instructions, not comprehensive semantic moderation.
 - `--cov=app` covers application modules; optional script behavior is tested separately by `test_live_acceptance.py`.

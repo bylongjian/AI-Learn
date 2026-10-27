@@ -1,5 +1,6 @@
 /// <reference types="@tarojs/taro" />
 declare const API_BASE_URL: string;
+declare const LOCAL_DEV_LOGIN: boolean;
 
 declare module '*.png';
 declare module '*.gif';

@@ -25,6 +25,7 @@ export interface AnswerRecord {
   duration_ms: number
 }
 export interface Report {
+  quiz_id?: string
   accuracy: number
   total: number
   correct: number

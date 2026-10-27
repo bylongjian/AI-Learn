@@ -77,14 +77,62 @@ HTTP、JSON、schema、统计或超时失败都会记录固定原因和失败阶
 2026-10-25 已完成真实 DeepSeek 验收：10 组出题、10 份报告全部通过，覆盖 3/4/5 题与 easy/medium/hard/mixed；
 出题耗时 2.687–4.859 秒，报告 2.016–2.828 秒。非 mixed 每题难度一致、题型数量、严格 JSON/schema、报告统计均通过。
 安全进度记录为 `.qa/live-verified-progress.jsonl`，摘要为 `.qa/live-summary.json`。该批次验证结构和流程，未逐题进行独立教学事实审计。
-最终离线验证为 193 tests passed，应用语句/分支覆盖率 100%；`pip check` 通过。详细 RED/GREEN 与真实诊断证据见 `TDD.md`。
+原有 AI 功能的 193 项测试保留通过。加入用户系统后，261 项测试通过，应用语句/分支覆盖率 98%；`pip check` 通过。详细 RED/GREEN 与真实诊断证据见 `TDD.md`。
+
+## 用户、登录和云端练习
+
+用户存储使用 MySQL 8、InnoDB 和 `utf8mb4`。连接池首次访问用户数据时才连接，关闭应用时释放。未配置数据库或数据库不可用均不阻止健康检查和游客 AI 功能启动；有效身份的云端存储失败返回安全的 503，不返回保存成功。
+
+在 `backend/.env` 设置 `MYSQL_HOST/PORT/USER/PASSWORD/DATABASE` 和私有随机 `JWT_SECRET`。`JWT_EXPIRE_SECONDS` 默认 604800 秒；JWT 固定使用 HS256，并验证签名、签发者、受众、过期时间和身份类型。`JWT_SECRET` 没有默认值。微信登录另需 `WECHAT_APP_ID`、`WECHAT_APP_SECRET`，由服务器调用 `code2Session`；整个换码过程最多 5 秒，失败后不自动重用 code。
+
+先由 MySQL 管理员创建数据库并授予该数据库的专用账号权限，再从 `backend` 初始化表：
+
+```powershell
+./.venv/Scripts/python.exe -m scripts.init_db
+# 指定其他环境文件：
+./.venv/Scripts/python.exe -m scripts.init_db --env-file .env.test
+```
+
+初始化 SQL 位于 `sql/001_users.sql`，重复执行安全；此命令建表并为已有表补齐统计所需的用户索引，不创建数据库或数据库账号。旧版本升级后也需执行一次。密码从环境文件读取，不作为命令参数传递。表包括用户、完整原始练习、每个练习的一份作答结果和一份报告；外键同时约束练习归属。
+
+`APP_ENV` 可为 `development/test/production`，默认 `development`。`DEV_LOGIN_ENABLED` 默认 `false`；仅在明确启用且环境为 `development` 时注册开发登录，还要求直连客户端为回环地址。开发账号 a/b 对应不同稳定身份，资料的 `is_test=true`，不依赖微信授权。生产环境禁止启用开发登录并拒绝开发身份 JWT。开发登录不应通过反向代理暴露给外部用户。
+
+以下路径均位于 `/api/v1`，使用现有 `code/message/data` 信封。用户接口要求 `Authorization: Bearer <token>`；缺失或过期返回 401。
+
+| 接口 | 输入 / `data` |
+| --- | --- |
+| `POST /user/login` | `{code}` → `{token,expires_in,user:Profile}` |
+| `POST /user/dev-login` | `{account:"a"或"b"}` → 同上；禁用时 404 |
+| `GET /user/profile` | `Profile` |
+| `PUT /user/profile` | `{nickname,avatar_url}` → 更新后的 `Profile` |
+| `GET /user/quizzes` | `page=1&page_size=10&search=&status=all或pending或completed` → `{items,total,page,page_size,totals}` |
+| `GET /user/quizzes/{quiz_id}` | `{quiz:原始完整Quiz,answer_records,report:Report或null,created_at}`；其他用户的练习 404 |
+
+`Profile` 包含 `id`（字符串）、`nickname`、`avatar_url`、`total_xp`、`quiz_count`、`correct_count`、`average_accuracy`、`is_test`。统计只计入完成并保存的结果；没有完成题目时平均正确率为 `null`，否则按全部完成题目加权，并沿用半数向上取整。昵称去除首尾空白后为 1–100 字符且拒绝控制字符；头像为空或不含用户密码的 HTTPS URL，最多 500 字符，没有上传功能。
+
+练习列表按创建时间、内部 ID 倒序，`page_size` 为 1–50，搜索按标题字面子串匹配。`items` 包含 `quiz_id/title/question_count/correct_count/accuracy/status/created_at`；未完成时 `correct_count/accuracy` 为 `null`，`status` 为 `not-started`，完成后为 `completed`。`totals` 的 `all/pending/completed` 基于当前搜索条件。时间使用 UTC ISO 8601。
+
+原有出题和报告路径继续支持游客；缺失或无效凭证按游客处理且完全不访问用户数据库。有效身份出题在返回前保存完整原始题目。报告验证归属和完整原题，不信任客户端的题目修改或 `is_correct`。答题结果、报告和 `correct*10` XP 同事务保存；失败全部回滚。已保存的同答案重试直接返回原报告，不再请求模型，冲突答案返回 409。模型调用期间不持有数据库锁。进程间并发依靠行锁和唯一约束，确保 XP 只增加一次；同进程同时提交还会合并模型调用。
+
+仅在成功完成身份对应的云端保存后，出题与报告响应附带 `X-Learning-User: <用户ID>`。CORS 公开该响应头并允许 `Authorization` 和 `PUT`；客户端可验证请求确实按该身份处理，避免令牌过期时把游客结果误当成云端保存。游客响应不含该头。登录接口另有每 IP 每分钟 30 次的进程内限额，不占 AI 限额；请求体大小限制同时覆盖 POST 和 PUT。
+
+## 用户系统测试环境
+
+用户仓储和端到端 API 测试要求真实 MySQL，不使用 SQLite 或替代仓储。新建独立测试数据库（名称必须以 `_test` 结尾）与专用账号，将配置放在被 Git 忽略的 `.env.test`；不能复制应用数据库名称。建议 `APP_ENV=test`、`DEV_LOGIN_ENABLED=false`，测试会在专用测试应用内显式启用开发身份。测试数据清理仅针对该独立数据库。
+
+测试账号需有独立测试数据库的建表、读写与 ALTER 权限；回滚测试通过临时 CHECK 约束使真实报告写入失败，并在 `finally` 中移除，不修改 MySQL 全局设置。测试依旧只替换外部模型或微信 HTTPS 边界，不访问付费模型。
+
+```powershell
+./.venv/Scripts/python.exe -m pytest --cov=app --cov-branch --cov-report=term-missing
+./.venv/Scripts/python.exe -m pip check
+```
 
 ## MVP 范围与限制
 
-不包含数据库、账号、搜索或分享。题目与作答由客户端回传，服务器根据收到的题目重新判分；此 MVP 不证明题目来源，不能作为防作弊成绩系统。
+包含账号、资料和标题搜索，以及登录后的练习和最终结果云端保存；不提供中途进度同步、游客历史自动导入、头像上传或对外分享接口。游客评分仍基于回传题目，登录评分只使用该用户已保存的原题。
 IP 限流仅在本进程内保存，默认最多 1024 个客户端、每 IP 每 60 秒 20 次，拒绝新客户端时也不增长内存。
 使用直接连接 IP，不信任任意 `X-Forwarded-For`。本地启动采用单 worker；多 worker/多实例不共享限流状态。
 请求体上限默认 64 KiB，包括分块请求。内容规则是可配置词表，覆盖输入与生成结果，不等同于完整语义内容审核。
-生产环境如需多实例限流、鉴权、追踪或日志平台，应在后续范围中设计。
+生产环境如需多实例共享限流、追踪或日志平台，应在后续范围中设计。
 
 参考：[DeepSeek JSON mode](https://api-docs.deepseek.com/guides/json_mode/)、[LangChain DeepSeek](https://docs.langchain.com/oss/python/integrations/chat/deepseek)。
