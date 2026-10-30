@@ -1,6 +1,15 @@
 from copy import deepcopy
 
 
+class FixedKnowledge:
+    """Replace the acquisition boundary when testing unrelated quiz/report contracts."""
+    async def prepare(self, request):
+        from app.models.knowledge import PreparedKnowledge
+        return PreparedKnowledge(status="ready", topic=request.topic_context or request.user_input,
+            sources=[{"id": "s1", "kind": "user_text", "title": "Test material", "url": None,
+                      "published_at": None, "excerpt": "Reference material for the learning topic."}])
+
+
 def question(index=1, kind="single", point=None):
     return {
         "id": f"q{index}", "type": kind, "stem": f"Question {index}",

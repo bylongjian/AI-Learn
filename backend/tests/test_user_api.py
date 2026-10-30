@@ -6,15 +6,15 @@ import pytest
 
 from app.core.config import Settings
 from app.main import create_app
-from tests.factories import quiz_content, report_request, report_text
-from tests.test_generation import SequenceProvider
+from tests.factories import quiz_content, report_request, report_text, FixedKnowledge
+from tests.test_generation import GroundedSequenceProvider as SequenceProvider
 from tests.test_user_repository import repository
 
 
 @asynccontextmanager
 async def client_for(repository, *, provider=None, identity_provider=None, remote="127.0.0.1", **changes):
     settings = Settings(_env_file=".env.test", **{"app_env": "development", "dev_login_enabled": True, **changes})
-    app = create_app(settings, provider or SequenceProvider(quiz_content(), report_text()), identity_provider=identity_provider)
+    app = create_app(settings, provider or SequenceProvider(quiz_content(), report_text()), identity_provider=identity_provider, knowledge_service=FixedKnowledge())
     async with app.router.lifespan_context(app):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app, client=(remote, 1000)), base_url="http://test") as client:
             yield client, app
@@ -143,7 +143,7 @@ async def test_db_failure_does_not_block_guests_or_health_and_auth_never_reports
     settings = Settings(_env_file=None, mysql_host="127.0.0.1", mysql_port=1, mysql_user="missing", mysql_database="missing", jwt_secret="s" * 64)
     from app.core.identity import create_token
     token = create_token(settings, "1", is_test=False)
-    app = create_app(settings, SequenceProvider(quiz_content(), quiz_content(), report_text()))
+    app = create_app(settings, SequenceProvider(quiz_content(), quiz_content(), report_text()), knowledge_service=FixedKnowledge())
     async with app.router.lifespan_context(app):
         assert app.state.database._pool is None
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:

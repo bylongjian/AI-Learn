@@ -1,0 +1,1427 @@
+[
+  {
+    "path": "topic",
+    "status": 200,
+    "seconds": 14.531,
+    "knowledge_seconds": 8.188,
+    "model_calls": 5,
+    "tool_calls": [
+      {
+        "name": "tavily_search_deep",
+        "seconds": 2.312
+      },
+      {
+        "name": "tavily_search_basic",
+        "seconds": 2.906
+      }
+    ],
+    "structured_calls": [
+      {
+        "schema": "InputAssessment",
+        "seconds": 1.11
+      },
+      {
+        "schema": "KnowledgeDecision",
+        "seconds": 1.515
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "seconds": 4.469
+      },
+      {
+        "schema": "EvidenceReview",
+        "seconds": 1.828
+      }
+    ],
+    "decisions": [
+      {
+        "status": "ready",
+        "reason": "资料为多篇直接来源，围绕 harness engineering 的定义、组成（工具、沙箱、循环、护栏、记忆、验证、编排）及其与 prompt/context engineering 的关系有共同依据，足以支持 5 道不重复题目；用户未要求最新，概念稳定，发布日期未知不影响。",
+        "topic": "Harness Engineering（AI 智能体的执行环境/系统设计）",
+        "source_ids": [
+          "s1",
+          "s2",
+          "s3",
+          "s4",
+          "s5"
+        ],
+        "options": [],
+        "reviews": [
+          {
+            "source_id": "s1",
+            "primary": true,
+            "independent_origin": "Databricks Blog"
+          },
+          {
+            "source_id": "s2",
+            "primary": true,
+            "independent_origin": "Faros"
+          },
+          {
+            "source_id": "s3",
+            "primary": true,
+            "independent_origin": "Werner Heijstek（LinkedIn Pulse）"
+          },
+          {
+            "source_id": "s4",
+            "primary": true,
+            "independent_origin": "deepset Blog"
+          },
+          {
+            "source_id": "s5",
+            "primary": true,
+            "independent_origin": "Milvus Blog"
+          }
+        ],
+        "freshness_supported": true,
+        "conflict_free": true
+      }
+    ],
+    "response": {
+      "code": 0,
+      "message": "ok",
+      "data": {
+        "title": "Harness Engineering 基础",
+        "summary": "理解 Harness Engineering 的定义、组成、与提示/上下文工程的关系及其对智能体可靠性的作用。",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "stem": "根据资料，Harness Engineering 主要关注什么？",
+            "options": [
+              {
+                "key": "A",
+                "text": "优化单次对话中给模型的措辞、结构和示例"
+              },
+              {
+                "key": "B",
+                "text": "围绕模型设计完整系统，包括工具、沙箱、循环和护栏"
+              },
+              {
+                "key": "C",
+                "text": "提升模型本身的参数规模与训练数据质量"
+              },
+              {
+                "key": "D",
+                "text": "只负责为模型编写更长的提示词"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料指出 Harness Engineering 是围绕模型设计完整系统，涵盖工具、沙箱、循环、护栏等，而非只优化提示词或训练模型。",
+            "knowledge_point": "Harness Engineering 的定义",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q2",
+            "type": "single",
+            "stem": "资料中提出的“Agent = Model + Harness”公式说明什么？",
+            "options": [
+              {
+                "key": "A",
+                "text": "智能体仅由模型决定，Harness 可有可无"
+              },
+              {
+                "key": "B",
+                "text": "Harness 与模型无关，只影响界面展示"
+              },
+              {
+                "key": "C",
+                "text": "智能体由模型和 Harness 共同构成，Harness 是使智能体在生产中可靠的关键部分"
+              },
+              {
+                "key": "D",
+                "text": "模型和 Harness 是同一概念的不同叫法"
+              }
+            ],
+            "answer": [
+              "C"
+            ],
+            "explanation": "Faros 资料提出 Agent = Model + Harness，并强调 Harness Engineering 是让 AI 智能体在生产中可靠的关键。",
+            "knowledge_point": "智能体构成公式",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q3",
+            "type": "single",
+            "stem": "按照 Databricks 资料，提示工程和上下文工程与 Harness Engineering 的关系是？",
+            "options": [
+              {
+                "key": "A",
+                "text": "三者完全独立，互不包含"
+              },
+              {
+                "key": "B",
+                "text": "Harness Engineering 属于提示工程的一部分"
+              },
+              {
+                "key": "C",
+                "text": "提示工程和上下文工程都位于 Harness Engineering 之内，Harness 是模型周围的系统"
+              },
+              {
+                "key": "D",
+                "text": "上下文工程取代了 Harness Engineering"
+              }
+            ],
+            "answer": [
+              "C"
+            ],
+            "explanation": "资料明确说明提示工程和上下文工程都存在于 Harness Engineering 之内，Harness 是模型周围的系统，提示和上下文是其中的组成部分。",
+            "knowledge_point": "Harness 与提示/上下文工程的关系",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q4",
+            "type": "multiple",
+            "stem": "根据资料，Harness Engineering 涉及以下哪些内容？",
+            "options": [
+              {
+                "key": "A",
+                "text": "智能体可调用的工具与可访问的知识来源"
+              },
+              {
+                "key": "B",
+                "text": "验证逻辑与防止架构漂移的约束"
+              },
+              {
+                "key": "C",
+                "text": "记忆、护栏与编排等模型之外的系统组件"
+              },
+              {
+                "key": "D",
+                "text": "仅调整模型温度参数以改变输出随机性"
+              }
+            ],
+            "answer": [
+              "A",
+              "B",
+              "C"
+            ],
+            "explanation": "资料指出 Harness 涵盖工具、知识来源、验证逻辑、架构约束、记忆、护栏和编排等；仅调温度参数不属于资料所述的 Harness 工程范围。",
+            "knowledge_point": "Harness 的组成要素",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q5",
+            "type": "judge",
+            "stem": "资料认为，当智能体出现可靠性问题时，仅更换模型通常就能解决，因为 Harness 不是关键因素。",
+            "options": [
+              {
+                "key": "A",
+                "text": "正确"
+              },
+              {
+                "key": "B",
+                "text": "错误"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "deepset 资料指出，如果更换模型没有解决可靠性问题，缺失的很可能就是 Harness；Harness 是使智能体在生产中可靠的关键。",
+            "knowledge_point": "Harness 对可靠性的作用",
+            "difficulty": "easy"
+          }
+        ],
+        "quiz_id": "d6a7241e-8d08-4cf8-88e8-a12abdcdae88",
+        "source_type": "text",
+        "user_input": "Harness Engineering",
+        "reference": {
+          "topic": "Harness Engineering（AI 智能体的执行环境/系统设计）",
+          "retrieved_at": "2026-10-28T16:20:36.835554+00:00",
+          "sources": [
+            {
+              "id": "s1",
+              "kind": "web",
+              "title": "What is an AI Agent Harness? | Databricks Blog",
+              "url": "https://www.databricks.com/blog/ai-harness",
+              "published_at": null,
+              "excerpt": "In this guide, we’ll cover the core components of an AI agent harness, why harnesses shape agent performance, how production agent systems are built and why harness engineering is emerging as its own discipline.\n…\nHarness engineering is the newest stage in a broader shift in how developers work with AI systems. As models have become more capable, the focus has gradually moved outward. It has shifted from writing better prompts, to controlling what information the model sees, to designing the entire system around the model.\n…\n| Harness engineering | Designing the full system around the model — tools, sandboxes, loops, guardrails | The harness itself | Agentic systems and autonomous workflows |\n…\nPrompt and context engineering both live inside harness engineering. The harness is the system around the model; prompts and context are pieces of that system."
+            },
+            {
+              "id": "s2",
+              "kind": "web",
+              "title": "Harness Engineering: A Guide to AI Coding Agents | Faros",
+              "url": "https://www.faros.ai/blog/harness-engineering",
+              "published_at": null,
+              "excerpt": "Agent = Model + Harness. Harness engineering is what makes AI agents reliable in production. See the five layers and the metrics that matter.\n…\n![AI icon within a fence (harness) on red background](https://cdn.prod.website-files.com/695be6d603b11be779b0b9b2/6a10767d6a0c7f4366a512f9_Harness%20Engineering.webp)\n…\nAgent = Model + Harness. Harness engineering is what makes AI agents reliable in production. See the five layers and the metrics that matter.\n…\n![AI icon within a fence (harness) on red background](https://cdn.prod.website-files.com/695be6d603b11be779b0b9b2/6a10767d6a0c7f4366a512f9_Harness%20Engineering.webp)"
+            },
+            {
+              "id": "s3",
+              "kind": "web",
+              "title": "What is harness engineering? - Werner Heijstek",
+              "url": "https://www.linkedin.com/pulse/what-harness-engineering-werner-heijstek-fmqve",
+              "published_at": null,
+              "excerpt": "Harness engineering, coined by Mitchell Hashimoto in February 2026, is the practice of designing the full environment an AI agent operates"
+            },
+            {
+              "id": "s4",
+              "kind": "web",
+              "title": "Harness Engineering: How to Build Reliable AI Agents by Engineering the System, Not the Model | deepset Blog",
+              "url": "https://www.deepset.ai/blog/harness-engineering",
+              "published_at": null,
+              "excerpt": "‍\n\nHarness engineering is the discipline of designing the systems, constraints, and feedback loops that wrap around an AI model to make it reliable in production. The agent harness is everything except the model: tools, memory, guardrails, verification, and orchestration. If you're building AI agents and wondering why swapping models isn't fixing your reliability problems, the harness is likely the missing piece.\n\n‍\n\nHarness engineering is a new term. The problems it describes are not.\n\n‍ [...] Shared agent infrastructure. Right now, most harnesses are built and maintained by individual teams for individual agents. The emerging direction is toward shared infrastructure: memory stores, skill registries, and protocol definitions that multiple agents draw on, maintained collectively rather than rebuilt from scratch each time. This changes the economics of harness engineering significantly, the fixed cost of building a good memory architecture or a well-specified skill library gets"
+            },
+            {
+              "id": "s5",
+              "kind": "web",
+              "title": "Harness Engineering: The Execution Layer AI Agents Actually Need",
+              "url": "https://milvus.io/blog/harness-engineering-ai-agents.md",
+              "published_at": null,
+              "excerpt": "Harness Engineering is the discipline of designing the execution environment around an autonomous AI agent. It defines which tools the agent can call, where it gets information, how it validates its own decisions, and when it should stop.\n\nTo understand why it matters, consider three layers of AI agent development: [...] Prompt engineering optimizes what you say to a model in a single exchange — phrasing, structure, examples. Harness Engineering builds the execution environment around an autonomous AI agent: the tools it can call, the knowledge it can access, the validation logic that checks its work, and the constraints that prevent architectural drift. Prompt engineering shapes one conversation turn. Harness Engineering shapes whether an agent can operate reliably for hours across hundreds of decisions [...] Harness Engineering builds the world the agent operates in. Tools, knowledge sources, validation logic, architectural constraints — everything that determines whether an agent can run reliably across hundreds of decisions without human supervision."
+            }
+          ],
+          "question_sources": [
+            {
+              "question_id": "q1",
+              "source_ids": [
+                "s1",
+                "s5"
+              ]
+            },
+            {
+              "question_id": "q2",
+              "source_ids": [
+                "s2"
+              ]
+            },
+            {
+              "question_id": "q3",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q4",
+              "source_ids": [
+                "s4",
+                "s5"
+              ]
+            },
+            {
+              "question_id": "q5",
+              "source_ids": [
+                "s4"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "saved_reference_equal": true
+  },
+  {
+    "path": "url",
+    "status": 200,
+    "seconds": 19.516,
+    "knowledge_seconds": 13.641,
+    "model_calls": 6,
+    "tool_calls": [
+      {
+        "name": "tavily_extract",
+        "seconds": 1.718
+      },
+      {
+        "name": "tavily_extract",
+        "seconds": 1.64
+      },
+      {
+        "name": "tavily_search_deep",
+        "seconds": 3.969
+      }
+    ],
+    "structured_calls": [
+      {
+        "schema": "KnowledgeDecision",
+        "seconds": 1.5
+      },
+      {
+        "schema": "KnowledgeDecision",
+        "seconds": 1.766
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "seconds": 3.89
+      },
+      {
+        "schema": "EvidenceReview",
+        "seconds": 1.985
+      }
+    ],
+    "decisions": [
+      {
+        "status": "insufficient",
+        "reason": "提供的片段仅涉及设计文档编目、架构文档、质量文档和计划工件等零散要点，缺乏可支撑5道不重复题目及答案讲解的连贯知识内容，且未给出该文的发布日期。",
+        "topic": "Harness engineering: leveraging Codex in an agent-first world",
+        "source_ids": [
+          "s1"
+        ],
+        "options": [],
+        "reviews": [
+          {
+            "source_id": "s1",
+            "primary": true,
+            "independent_origin": "OpenAI（openai.com 官方文章页面）"
+          }
+        ],
+        "freshness_supported": false,
+        "conflict_free": true
+      },
+      {
+        "status": "ready",
+        "reason": "",
+        "topic": "Harness engineering：在 agent-first 工作流中用 Codex 进行工程设计，包括仓库知识作为系统记录、计划作为一等工件、文档分类与质量跟踪，以及工程师角色的重新定义",
+        "source_ids": [
+          "s1",
+          "s2",
+          "s5"
+        ],
+        "options": [],
+        "reviews": [
+          {
+            "source_id": "s1",
+            "primary": true,
+            "independent_origin": "OpenAI 官方博客文章 Harness engineering: leveraging Codex in an agent-first world（openai.com/index/harness-engineering/）"
+          },
+          {
+            "source_id": "s2",
+            "primary": true,
+            "independent_origin": "OpenAI 官方博客文章 Harness engineering: leveraging Codex in an agent-first world（openai.com/index/harness-engineering，与 s1 为同一原文）"
+          },
+          {
+            "source_id": "s5",
+            "primary": true,
+            "independent_origin": "OpenAI 官方博客文章 An open-source spec for Codex orchestration: Symphony（openai.com/index/open-source-codex-orchestration-symphony），其中回顾并引用了 harness engineering 一文"
+          }
+        ],
+        "freshness_supported": true,
+        "conflict_free": true
+      }
+    ],
+    "response": {
+      "code": 0,
+      "message": "ok",
+      "data": {
+        "title": "Harness engineering：agent-first 工作流中的 Codex 工程实践",
+        "summary": "学习如何在 agent-first 工作流中用 Codex 进行工程设计，理解仓库知识作为系统记录、计划作为一等工件、文档分类与质量跟踪，以及工程师角色的重新定义。",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "stem": "根据资料，harness engineering 实践中把什么作为“系统记录”（system of record）？",
+            "options": [
+              {
+                "key": "A",
+                "text": "外部聊天上下文"
+              },
+              {
+                "key": "B",
+                "text": "仓库中的知识"
+              },
+              {
+                "key": "C",
+                "text": "个人笔记"
+              },
+              {
+                "key": "D",
+                "text": "邮件往来"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料标题明确写到“We made repository knowledge the system of record”，即以仓库知识作为系统记录。",
+            "knowledge_point": "仓库知识作为系统记录",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q2",
+            "type": "single",
+            "stem": "资料中，计划在 agent-first 工作流里被如何对待？",
+            "options": [
+              {
+                "key": "A",
+                "text": "仅作为口头讨论，不保留"
+              },
+              {
+                "key": "B",
+                "text": "只存放在外部工具中，不入库"
+              },
+              {
+                "key": "C",
+                "text": "作为一等工件，复杂工作有执行计划并记录进度与决策日志"
+              },
+              {
+                "key": "D",
+                "text": "只在项目结束时补写"
+              }
+            ],
+            "answer": [
+              "C"
+            ],
+            "explanation": "资料指出“Plans are treated as first-class artifacts”，复杂工作用执行计划记录进度和决策日志并提交到仓库。",
+            "knowledge_point": "计划作为一等工件",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q3",
+            "type": "single",
+            "stem": "关于设计文档的编目与索引，资料提到其中包含哪些内容？",
+            "options": [
+              {
+                "key": "A",
+                "text": "仅文档标题"
+              },
+              {
+                "key": "B",
+                "text": "验证状态和一组定义 agent-first 运营原则的核心信念"
+              },
+              {
+                "key": "C",
+                "text": "仅作者名单"
+              },
+              {
+                "key": "D",
+                "text": "仅发布日期"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料写明设计文档被编目和索引，包括验证状态以及一组定义 agent-first 运营原则的核心信念。",
+            "knowledge_point": "文档分类与质量跟踪",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q4",
+            "type": "multiple",
+            "stem": "根据资料，以下哪些属于 harness engineering 实践中的做法？（多选）",
+            "options": [
+              {
+                "key": "A",
+                "text": "把仓库知识作为系统记录"
+              },
+              {
+                "key": "B",
+                "text": "把计划作为一等工件，并版本化活跃计划、已完成计划和已知技术债"
+              },
+              {
+                "key": "C",
+                "text": "用质量文档为每个产品领域和架构层评分并跟踪差距"
+              },
+              {
+                "key": "D",
+                "text": "完全依赖外部上下文，不在仓库中保留计划"
+              }
+            ],
+            "answer": [
+              "A",
+              "B",
+              "C"
+            ],
+            "explanation": "A、B、C 均在资料中有依据；D 与资料相反，资料强调代理无需依赖外部上下文即可运作。",
+            "knowledge_point": "agent-first 工作流的核心实践",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q5",
+            "type": "judge",
+            "stem": "资料提到 harness engineering 涉及“重新定义工程师的角色”。",
+            "options": [
+              {
+                "key": "A",
+                "text": "正确"
+              },
+              {
+                "key": "B",
+                "text": "错误"
+              }
+            ],
+            "answer": [
+              "A"
+            ],
+            "explanation": "资料目录中包含“Redefining the role of the engineer”一节，说明该主题涉及工程师角色的重新定义。",
+            "knowledge_point": "工程师角色的重新定义",
+            "difficulty": "easy"
+          }
+        ],
+        "quiz_id": "85062215-b4b9-4c25-b834-6035d8ff0fec",
+        "source_type": "text",
+        "user_input": "https://openai.com/index/harness-engineering/",
+        "reference": {
+          "topic": "Harness engineering：在 agent-first 工作流中用 Codex 进行工程设计，包括仓库知识作为系统记录、计划作为一等工件、文档分类与质量跟踪，以及工程师角色的重新定义",
+          "retrieved_at": "2026-10-28T16:20:56.809570+00:00",
+          "sources": [
+            {
+              "id": "s1",
+              "kind": "web",
+              "title": "Harness engineering: leveraging Codex in an agent-first world | OpenAI",
+              "url": "https://openai.com/index/harness-engineering/",
+              "published_at": null,
+              "excerpt": "Design documentation is catalogued and indexed, including verification status and a set of core beliefs that define agent-first operating principles. Architecture documentation⁠(opens in a new window) provides a top-level map of domains and package layering. A quality document grades each product domain and architectural layer, tracking gaps over time.\n…\nPlans are treated as first-class artifacts. Ephemeral lightweight plans are used for small changes, while complex work is captured in execution plans⁠(opens in a new window) with progress and decision logs that are checked into the repository. Active plans, completed plans, and known technical debt are all versioned and co-located, allowing agents to operate without relying on external context. [...] How we built ChatGPT’s novel ad stack for user\n…\n trust and relevance Engineering Oct 21, 2026\n…\nRapidly scaling online storage to serve over 1 billion ChatGPT users Engineering Sep 11, 2026"
+            },
+            {
+              "id": "s2",
+              "kind": "web",
+              "title": "Harness engineering: leveraging Codex in an agent-first world | OpenAI",
+              "url": "https://openai.com/index/harness-engineering",
+              "published_at": null,
+              "excerpt": "*   [We started with an empty git repository](https://openai.com/index/harness-engineering#we-started-with-an-empty-git-repository)\n…\n*   [Redefining the role of the engineer](https://openai.com/index/harness-engineering#redefining-the-role-of-the-engineer)\n…\n*   [Increasing application legibility](https://openai.com/index/harness-engineering#increasing-application-legibility)\n…\n*   [We made repository knowledge the system of record](https://openai.com/index/harness-engineering#we-made-repository-knowledge-the-system-of-record)"
+            },
+            {
+              "id": "s5",
+              "kind": "web",
+              "title": "An open-source spec for Codex orchestration: Symphony.",
+              "url": "https://openai.com/index/open-source-codex-orchestration-symphony",
+              "published_at": null,
+              "excerpt": "To make that work, we redesigned our engineering workflow from the ground up. We built an agent-friendly repository, invested heavily in automated tests and guardrails, and treated Codex as a full-fledged teammate. We documented that journey in our previous [blog post on harness engineering⁠](https://openai.com/index/harness-engineering/).\n…\nCodex App Server was a perfect fit for our use case: we take advantage of the harness Codex provides while having knobs and hooks to plug into. For example, to avoid exposing the Linear access token to subagents, we use [dynamic tool calls⁠(opens in a new window)](https://developers.openai.com/codex/app-server/#dynamic-tool-calls-experimental) to expose the raw `linear_graphql` function that executes arbitrary requests against Linear, without rel\n…\nSymphony is an intentionally minimal orchestration layer. We’re open sourcing it to demonstrate the power of Codex App Server when paired with different workflow tools, like Linear. As such, we don’t plan to maintain Symphony as a standalone product. Think of it as a reference implementation. Similar to how many developers pointed their coding agents at the harness engineering post to scaffold their repositories, we hope you point your favorite c\n…\nWe’re thrilled to see the engineering community using Symphony in the weeks since release, garnering over [15K GitHub stars⁠(opens in a new window)](https://github.com/openai/symphony) as of April 23."
+            }
+          ],
+          "question_sources": [
+            {
+              "question_id": "q1",
+              "source_ids": [
+                "s2"
+              ]
+            },
+            {
+              "question_id": "q2",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q3",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q4",
+              "source_ids": [
+                "s1",
+                "s2"
+              ]
+            },
+            {
+              "question_id": "q5",
+              "source_ids": [
+                "s2"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "saved_reference_equal": true
+  },
+  {
+    "path": "mixed",
+    "status": 200,
+    "seconds": 9.203,
+    "knowledge_seconds": 2.813,
+    "model_calls": 3,
+    "tool_calls": [
+      {
+        "name": "tavily_extract",
+        "seconds": 1.391
+      }
+    ],
+    "structured_calls": [
+      {
+        "schema": "KnowledgeDecision",
+        "seconds": 1.422
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "seconds": 4.593
+      },
+      {
+        "schema": "EvidenceReview",
+        "seconds": 1.797
+      }
+    ],
+    "decisions": [
+      {
+        "status": "ready",
+        "reason": "The user specified a single article and did not require the latest version; the provided excerpt directly covers repository context, feedback loops and human oversight, which is enough to support 5 questions. No publication date is given, but this is not a reason to reject the material.",
+        "topic": "AI agent harness engineering: repository context, feedback loops and human oversight, as described in OpenAI's \"Harness engineering: leveraging Codex in an agent-first world\"",
+        "source_ids": [
+          "s1"
+        ],
+        "options": [],
+        "reviews": [
+          {
+            "source_id": "s1",
+            "primary": true,
+            "independent_origin": "OpenAI — \"Harness engineering: leveraging Codex in an agent-first world\" (openai.com/index/harness-engineering/)"
+          }
+        ],
+        "freshness_supported": true,
+        "conflict_free": true
+      }
+    ],
+    "response": {
+      "code": 0,
+      "message": "ok",
+      "data": {
+        "title": "AI 智能体 Harness 工程：仓库上下文、反馈回路与人类监督",
+        "summary": "理解 OpenAI 在 agent-first 开发中如何通过仓库上下文、自动反馈回路与人类监督让 Codex 智能体可靠完成工程任务。",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "stem": "根据资料，人类在该 agent-first 系统中与系统交互的主要方式是什么？",
+            "options": [
+              {
+                "key": "A",
+                "text": "直接手写全部代码并提交"
+              },
+              {
+                "key": "B",
+                "text": "几乎完全通过提示：工程师描述任务、运行智能体，并允许它发起拉取请求"
+              },
+              {
+                "key": "C",
+                "text": "通过图形化拖拽界面配置智能体"
+              },
+              {
+                "key": "D",
+                "text": "通过数据库查询语句驱动智能体"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料明确指出人类几乎完全通过提示与系统交互：描述任务、运行智能体并允许其打开拉取请求。",
+            "knowledge_point": "人类与智能体的交互方式",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q2",
+            "type": "single",
+            "stem": "资料中描述 Codex 如何获取上下文，而不需要人类复制粘贴到 CLI？",
+            "options": [
+              {
+                "key": "A",
+                "text": "只依赖人类在聊天中提供的代码片段"
+              },
+              {
+                "key": "B",
+                "text": "直接使用标准开发工具，如 gh、本地脚本和仓库内嵌技能"
+              },
+              {
+                "key": "C",
+                "text": "通过外部搜索引擎抓取公开网页"
+              },
+              {
+                "key": "D",
+                "text": "由人类每天手动导出仓库快照"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料说明 Codex 直接使用 gh、本地脚本和仓库内嵌技能等标准开发工具来收集上下文。",
+            "knowledge_point": "仓库上下文获取",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q3",
+            "type": "single",
+            "stem": "为推动一个拉取请求完成，资料要求 Codex 做什么？",
+            "options": [
+              {
+                "key": "A",
+                "text": "只提交一次代码，等待人类最终审核"
+              },
+              {
+                "key": "B",
+                "text": "在本地审查自己的更改，请求本地和云端的特定智能体审查，回应人类或智能体反馈，并循环迭代直到所有智能体审查者满意"
+              },
+              {
+                "key": "C",
+                "text": "跳过审查以加快交付速度"
+              },
+              {
+                "key": "D",
+                "text": "仅由人类审查者逐行检查，智能体不参与"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料描述了本地自审、请求本地与云端智能体审查、回应反馈并循环迭代直到所有智能体审查者满意的流程。",
+            "knowledge_point": "反馈回路",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q4",
+            "type": "multiple",
+            "stem": "根据资料，当软件工程团队的主要工作不再是写代码时，团队需要转向哪些工作？",
+            "options": [
+              {
+                "key": "A",
+                "text": "设计环境"
+              },
+              {
+                "key": "B",
+                "text": "明确意图"
+              },
+              {
+                "key": "C",
+                "text": "构建让 Codex 智能体可靠工作的反馈回路"
+              },
+              {
+                "key": "D",
+                "text": "完全取消人类监督与审查"
+              }
+            ],
+            "answer": [
+              "A",
+              "B",
+              "C"
+            ],
+            "explanation": "资料指出团队主要工作变为设计环境、明确意图并构建反馈回路，使 Codex 智能体可靠工作；并未说取消人类监督。",
+            "knowledge_point": "人类监督与团队角色转变",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q5",
+            "type": "judge",
+            "stem": "资料指出，由于仓库完全由智能体生成，它首先针对 Codex 的可读性进行优化，目标是让智能体能直接从仓库本身推理整个业务领域。",
+            "options": [
+              {
+                "key": "A",
+                "text": "正确"
+              },
+              {
+                "key": "B",
+                "text": "错误"
+              }
+            ],
+            "answer": [
+              "A"
+            ],
+            "explanation": "资料明确说仓库完全由智能体生成，优先优化 Codex 的可读性，人类工程师的目标是让智能体直接从仓库推理整个业务领域。",
+            "knowledge_point": "仓库上下文与可读性",
+            "difficulty": "hard"
+          }
+        ],
+        "quiz_id": "5b7ed39a-baec-4ad5-95bf-8c5a22d6ba79",
+        "source_type": "text",
+        "user_input": "Learn AI agent harness engineering from https://openai.com/index/harness-engineering/ . Focus on repository context, feedback loops and human oversight.",
+        "reference": {
+          "topic": "AI agent harness engineering: repository context, feedback loops and human oversight, as described in OpenAI's \"Harness engineering: leveraging Codex in an agent-first world\"",
+          "retrieved_at": "2026-10-28T16:21:05.515282+00:00",
+          "sources": [
+            {
+              "id": "s1",
+              "kind": "web",
+              "title": "Harness engineering: leveraging Codex in an agent-first world | OpenAI",
+              "url": "https://openai.com/index/harness-engineering/",
+              "published_at": null,
+              "excerpt": "Humans interact with the system almost entirely through prompts: an engineer describes a task, runs the agent, and allows it to open a pull request. To drive a PR to completion, we instruct Codex to review its own changes locally, request additional specific agent reviews both locally and in the cloud, respond to any human or agent given feedback, and iterate in a loop until all agent reviewers are satisfied (effectively this is a Ralph Wiggum Lo\n…\nop⁠(opens in a new window)). Codex uses our standard development tools directly (gh, local scripts, and repository-embedded skills) to gather context without humans copying and pasting into the CLI.\n…\nWe intentionally chose this constraint so we would build what was necessary to increase engineering velocity by orders of magnitude. We had weeks to ship what ended up being a million lines of code. To do that, we needed to understand what changes when a software engineering team’s primary job is no longer to write code, but to design environments, specify intent, and build feedback loops that allow Codex agents to do reliable work.\n…\nThe first commit to an empty repository landed in late August 2025. [...] Because the repository is entirely agent-generated, it’s optimized first for _Codex’s_ _legibility_. In the same way teams aim to improve navigability of their code for new engineering hires, our human engineers’ goal was making it possible for an agent to reason about the full business domain directly from the repository itself."
+            }
+          ],
+          "question_sources": [
+            {
+              "question_id": "q1",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q2",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q3",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q4",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q5",
+              "source_ids": [
+                "s1"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "saved_reference_equal": true
+  },
+  {
+    "path": "full_text",
+    "status": 200,
+    "seconds": 5.969,
+    "knowledge_seconds": 1.782,
+    "model_calls": 4,
+    "tool_calls": [],
+    "structured_calls": [
+      {
+        "schema": "InputAssessment",
+        "seconds": 0.375
+      },
+      {
+        "schema": "KnowledgeDecision",
+        "seconds": 1.407
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "seconds": 2.906
+      },
+      {
+        "schema": "EvidenceReview",
+        "seconds": 1.281
+      }
+    ],
+    "decisions": [
+      {
+        "status": "ready",
+        "reason": "用户提供了充分正文，领域明确为水的性质与物态变化；片段包含冰点、沸点、化学式、分子构成及熔化、凝固、蒸发、凝化等知识点，足以支持5道不重复题目。用户未要求最新信息，概念稳定，无事实冲突。",
+        "topic": "标准大气压下纯水的性质、组成与物态变化",
+        "source_ids": [
+          "s1"
+        ],
+        "options": [],
+        "reviews": [
+          {
+            "source_id": "s1",
+            "primary": true,
+            "independent_origin": "用户提供的资料（用户原文）"
+          }
+        ],
+        "freshness_supported": true,
+        "conflict_free": true
+      }
+    ],
+    "response": {
+      "code": 0,
+      "message": "ok",
+      "data": {
+        "title": "纯水的性质、组成与物态变化",
+        "summary": "掌握标准大气压下纯水的沸点凝固点、H2O组成以及熔化凝固蒸发凝结四种物态变化。",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "stem": "标准大气压下，纯水的沸点是多少摄氏度？",
+            "options": [
+              {
+                "key": "A",
+                "text": "0摄氏度"
+              },
+              {
+                "key": "B",
+                "text": "50摄氏度"
+              },
+              {
+                "key": "C",
+                "text": "100摄氏度"
+              },
+              {
+                "key": "D",
+                "text": "212摄氏度"
+              }
+            ],
+            "answer": [
+              "C"
+            ],
+            "explanation": "资料明确指出，标准大气压下纯水在100摄氏度沸腾。",
+            "knowledge_point": "纯水的沸点",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q2",
+            "type": "single",
+            "stem": "每个水分子中含有几个氢原子和几个氧原子？",
+            "options": [
+              {
+                "key": "A",
+                "text": "一个氢原子和一个氧原子"
+              },
+              {
+                "key": "B",
+                "text": "两个氢原子和一个氧原子"
+              },
+              {
+                "key": "C",
+                "text": "两个氢原子和两个氧原子"
+              },
+              {
+                "key": "D",
+                "text": "一个氢原子和两个氧原子"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料说明每个水分子有两个氢原子和一个氧原子。",
+            "knowledge_point": "水分子的原子组成",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q3",
+            "type": "single",
+            "stem": "根据资料，液态水变为水蒸气的过程称为什么？",
+            "options": [
+              {
+                "key": "A",
+                "text": "熔化"
+              },
+              {
+                "key": "B",
+                "text": "凝固"
+              },
+              {
+                "key": "C",
+                "text": "蒸发"
+              },
+              {
+                "key": "D",
+                "text": "凝结"
+              }
+            ],
+            "answer": [
+              "C"
+            ],
+            "explanation": "资料指出，蒸发是液态水变为水蒸气的过程。",
+            "knowledge_point": "蒸发",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q4",
+            "type": "multiple",
+            "stem": "根据资料，下列哪些说法正确？",
+            "options": [
+              {
+                "key": "A",
+                "text": "冰是固态水"
+              },
+              {
+                "key": "B",
+                "text": "水蒸气是气态水"
+              },
+              {
+                "key": "C",
+                "text": "凝固使液态水变为冰"
+              },
+              {
+                "key": "D",
+                "text": "物态变化会改变水的化学组成"
+              }
+            ],
+            "answer": [
+              "A",
+              "B",
+              "C"
+            ],
+            "explanation": "资料说明冰是固态水、水蒸气是气态水，凝固使液态水变为冰；同时指出物态变化不改变水的化学组成，故D错误。",
+            "knowledge_point": "水的物态与物态变化",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q5",
+            "type": "judge",
+            "stem": "水的物态变化会改变水的化学组成。",
+            "options": [
+              {
+                "key": "A",
+                "text": "正确"
+              },
+              {
+                "key": "B",
+                "text": "错误"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料明确指出，这些物态变化不改变水的化学组成，因此该说法错误。",
+            "knowledge_point": "物态变化与化学组成",
+            "difficulty": "easy"
+          }
+        ],
+        "quiz_id": "51c7d5dc-353d-4f63-96a1-b8508aee5539",
+        "source_type": "text",
+        "user_input": "At standard atmospheric pressure, pure water freezes at 0 degrees Celsius and boils at 100 degrees Celsius. Water consists of hydrogen and oxygen, and its chemical formula is H2O. Each water molecule has two hydrogen atoms and one oxygen atom. Ice is solid water, liquid water flows, and water vapor is gaseous water. Melting changes solid ice to liquid water. Freezing changes liquid water to ice. Evaporation changes liquid water to vapor. Condensation changes vapor to liquid water. These changes of state do not change the chemical composition of water. Please make questions only about this text.",
+        "reference": {
+          "topic": "标准大气压下纯水的性质、组成与物态变化",
+          "retrieved_at": "2026-10-28T16:21:13.686791+00:00",
+          "sources": [
+            {
+              "id": "s1",
+              "kind": "user_text",
+              "title": "用户提供的资料",
+              "url": null,
+              "published_at": null,
+              "excerpt": "At standard atmospheric pressure, pure water freezes at 0 degrees Celsius and boils at 100 degrees Celsius. Water consists of hydrogen and oxygen, and its chemical formula is H2O. Each water molecule has two hydrogen atoms and one oxygen atom. Ice is solid water, liquid water flows, and water vapor is gaseous water. Melting changes solid ice to liquid water. Freezing changes liquid water to ice. Evaporation changes liquid water to vapor. Condensation changes vapor to liquid water. These changes of state do not change the chemical composition of water. Please make questions only about this text."
+            }
+          ],
+          "question_sources": [
+            {
+              "question_id": "q1",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q2",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q3",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q4",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q5",
+              "source_ids": [
+                "s1"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "saved_reference_equal": true,
+    "report": {
+      "status": 200,
+      "seconds": 1.922,
+      "accuracy": 100
+    }
+  },
+  {
+    "path": "selected_domain",
+    "status": 200,
+    "seconds": 14.781,
+    "knowledge_seconds": 8.094,
+    "model_calls": 5,
+    "tool_calls": [
+      {
+        "name": "tavily_search_deep",
+        "seconds": 2.344
+      },
+      {
+        "name": "tavily_search_basic",
+        "seconds": 2.516
+      }
+    ],
+    "structured_calls": [
+      {
+        "schema": "InputAssessment",
+        "seconds": 0.609
+      },
+      {
+        "schema": "KnowledgeDecision",
+        "seconds": 2.485
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "seconds": 4.562
+      },
+      {
+        "schema": "EvidenceReview",
+        "seconds": 2.11
+      }
+    ],
+    "decisions": [
+      {
+        "status": "ready",
+        "reason": "领域已明确为 AI coding agents 的 harness 工程；五个来源均直接给出 harness 的定义、Agent = Model + Harness 公式、组成要素与反馈循环等可出题知识点，关键事实一致，无未解决矛盾。用户未要求最新，发布日期未知不影响。",
+        "topic": "Harness Engineering：面向 AI coding agents 的仓库上下文、harness 与反馈循环",
+        "source_ids": [
+          "s1",
+          "s2",
+          "s3",
+          "s4",
+          "s5"
+        ],
+        "options": [],
+        "reviews": [
+          {
+            "source_id": "s1",
+            "primary": true,
+            "independent_origin": "MadPlay 博客文章《Beyond Prompts and Context: Harness Engineering for AI Agents》"
+          },
+          {
+            "source_id": "s2",
+            "primary": true,
+            "independent_origin": "Adobe Open Source《Repository Harnesses for AI Coding Agents》Further Reading 页面"
+          },
+          {
+            "source_id": "s3",
+            "primary": true,
+            "independent_origin": "Endor Labs 文章《Harness engineering: how to make AI coding agents reliable and secure》"
+          },
+          {
+            "source_id": "s4",
+            "primary": true,
+            "independent_origin": "Addy Osmani 博客文章《Agent Harness Engineering》"
+          },
+          {
+            "source_id": "s5",
+            "primary": true,
+            "independent_origin": "Faros AI 博客文章《Harness engineering: A guide to building better AI coding agents》"
+          }
+        ],
+        "freshness_supported": true,
+        "conflict_free": true
+      }
+    ],
+    "response": {
+      "code": 0,
+      "message": "ok",
+      "data": {
+        "title": "Harness Engineering 基础",
+        "summary": "理解 harness 的定义、组成、与提示/上下文工程的区别，以及反馈循环在 AI coding agents 中的作用。",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "stem": "根据资料，用公式概括“Agent”的构成，正确的是哪一项？",
+            "options": [
+              {
+                "key": "A",
+                "text": "Agent = Model + Harness"
+              },
+              {
+                "key": "B",
+                "text": "Agent = Prompt + Context"
+              },
+              {
+                "key": "C",
+                "text": "Agent = Model + RAG"
+              },
+              {
+                "key": "D",
+                "text": "Agent = Harness + Linter"
+              }
+            ],
+            "answer": [
+              "A"
+            ],
+            "explanation": "多份资料均给出 Agent = Model + Harness 的公式，harness 是模型之外围绕模型的一切。",
+            "knowledge_point": "Agent 的构成公式",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q2",
+            "type": "single",
+            "stem": "按照 OpenAI 的用法，下列哪一项不属于 harness 的组成部分？",
+            "options": [
+              {
+                "key": "A",
+                "text": "CI 配置与格式化规则"
+              },
+              {
+                "key": "B",
+                "text": "仓库结构与项目指令"
+              },
+              {
+                "key": "C",
+                "text": "外部工具集成与 linter"
+              },
+              {
+                "key": "D",
+                "text": "模型自身的预训练权重"
+              }
+            ],
+            "answer": [
+              "D"
+            ],
+            "explanation": "资料指出 harness 包括仓库结构、CI 配置、格式化规则、包管理器、框架、项目指令、外部工具集成和 linter 等，模型本身不在其中。",
+            "knowledge_point": "harness 的组成范围",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q3",
+            "type": "single",
+            "stem": "资料中，harness engineering 与 context engineering 区分最明显的一点是什么？",
+            "options": [
+              {
+                "key": "A",
+                "text": "harness engineering 只关注提示词措辞优化"
+              },
+              {
+                "key": "B",
+                "text": "在 agent 大量生成代码的环境中，使用自定义 linter 和结构性测试来保持架构一致性与品味"
+              },
+              {
+                "key": "C",
+                "text": "harness engineering 完全取代了 RAG 和 MCP"
+              },
+              {
+                "key": "D",
+                "text": "context engineering 只适用于非编程场景"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料明确说明，在 agent 生成大量代码的环境中，OpenAI 用自定义 linter 和结构性测试保持架构一致性与品味，这是两者最清晰的分界。",
+            "knowledge_point": "harness engineering 与 context engineering 的区别",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q4",
+            "type": "multiple",
+            "stem": "根据资料，下列哪些属于 harness engineering 所设计的“围绕模型”的要素？",
+            "options": [
+              {
+                "key": "A",
+                "text": "上下文与工具"
+              },
+              {
+                "key": "B",
+                "text": "约束与反馈循环"
+              },
+              {
+                "key": "C",
+                "text": "模型的参数规模"
+              },
+              {
+                "key": "D",
+                "text": "执行逻辑与可强制执行的约束"
+              }
+            ],
+            "answer": [
+              "A",
+              "B",
+              "D"
+            ],
+            "explanation": "资料将 harness 描述为上下文、工具、约束、反馈循环以及执行逻辑等模型之外的部分；模型参数规模属于模型本身。",
+            "knowledge_point": "harness 的核心要素",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q5",
+            "type": "judge",
+            "stem": "判断：资料提出，每当发现 agent 犯错，就应投入工程手段设计解决方案，使 agent 不再犯同样的错误。",
+            "options": [
+              {
+                "key": "A",
+                "text": "正确"
+              },
+              {
+                "key": "B",
+                "text": "错误"
+              }
+            ],
+            "answer": [
+              "A"
+            ],
+            "explanation": "AddyOsmani 的资料原文表达了这一思路：agent 每次出错，就工程化地解决，使其不再犯同类错误。",
+            "knowledge_point": "反馈循环与持续改进",
+            "difficulty": "easy"
+          }
+        ],
+        "quiz_id": "5905d761-cd50-4e94-a325-7eabb17a03e4",
+        "source_type": "text",
+        "user_input": "Harness Engineering",
+        "reference": {
+          "topic": "Harness Engineering：面向 AI coding agents 的仓库上下文、harness 与反馈循环",
+          "retrieved_at": "2026-10-28T16:21:27.896657+00:00",
+          "sources": [
+            {
+              "id": "s1",
+              "kind": "web",
+              "title": "Beyond Prompts and Context: Harness Engineering for AI Agents | MadPlay🚀",
+              "url": "https://madplay.github.io/en/post/harness-engineering",
+              "published_at": null,
+              "excerpt": "In February 2026, this area finally got a name: **harness engineering**. In OpenAI’s usage, a harness is the **full environment of scaffolding, constraints, and feedback loops** that surrounds an AI agent such as Codex and lets it perform stable work. Repository structure, CI configuration, formatting rules, package managers, application frameworks, project instructions, external tool integration, and linters are all part of the harness. The harn\n…\nIn that context, **harness engineering** refers to a shift in the engineer’s role: away from manually writing code and toward **designing the environment, specifying intent clearly, and building the feedback loops** that allow agents to autonomously build and maintain software.\n…\nTimeline of the shift 2023~2024 Peak of prompt engineering One question, one answer structure and optimization of instructions Mid-2025 Rise of context engineering Karpathy's remarks helped bring broader attention, alongside LangChain and Anthropic's formal definitions System-level context design through RAG, MCP, memory, and similar tools 2026.02 Emergence of harness engineering Mitchell Hashimoto blog (2026.02.05) OpenAI field report (2026.02.1\n…\nThis is where harness engineering separates most clearly from context engineering. In environments where agents generate large amounts of code, OpenAI used **custom linters and structural tests** to preserve architectural consistency and taste."
+            },
+            {
+              "id": "s2",
+              "kind": "web",
+              "title": "Further Reading - Repository Harnesses for AI Coding Agents",
+              "url": "https://opensource.adobe.com/ai-repo-harness-guide/READING",
+              "published_at": null,
+              "excerpt": "  + [Context Engineering for AI Agents in Open-Source Software](#context-engineering-for-ai-agents-in-open-source-software)\n…\n**Why it's worth reading**: Anthropic's own take on harness design, focused on the context window management problem (Layer 3). The initializer-plus-coding-agent pattern — set up the environment and documentation once, then work incrementally on single features — is a concrete answer to how agents maintain coherent progress across multiple context windows. The \"clean state\" requirement maps directly to sensor layers: each increment must be mergea\n…\n> Harness engineering is the discipline of designing, building, and operating the infrastructure that constrains, informs, verifies, and corrects AI agents in production.\n…\n**Why it's worth reading**: The most compelling production evidence available for what a mature coding agent harness produces: 1,000+ merged PRs per week, zero human interaction during the run, human review at the end. Stripe built context-aware tooling, isolated environments, and feedback loops — all three map directly to the harness layers in chapter 03. A useful benchmark for teams calibrating how much infrastructure investment is justified be"
+            },
+            {
+              "id": "s3",
+              "kind": "web",
+              "title": "Harness engineering: how to make AI coding agents reliable and secure | Endor Labs",
+              "url": "https://www.endorlabs.com/learn/harness-engineering-how-to-make-ai-coding-agents-reliable-and-secure",
+              "published_at": null,
+              "excerpt": "Harness engineering is the practice of designing everything around an AI model – the context, tools, constraints, and feedback loops – so it becomes a reliable, production-ready coding agent. The short version is a formula: Agent = Model + Harness.\n\nThe model is the raw brain. The harness is everything that steers it, checks its work, and helps it recover from mistakes. [...] Harness engineering is the practice of designing everything around an AI model (context, tools, constraints, feedback loops) so it becomes a reliable coding agent. The formula is Agent = Model + Harness.\n\n### Why is it called \"harness engineering\"?\n\nThe name reflects the idea that the harness is everything wrapped around the model. It works like scaffolding that steers and constrains the model so it can do real work safely.\n\n### What is a harness engineer? [...] Harness engineering is the 2026 discipline that turns a raw AI model into a reliable coding agent. Here's what it means, why it matters, and where security fits in.\n\nPublished on\n\nAugust 17, 2026\n\nUpdated on\n\nAugust 17, 2026\n\nTopics\n\nAI/ML\n\nSummarize with AI\n\nChat GPT logoPerplexity logoGemini logoGrok logoClaude Logo\n\n## What harness engineering actually means"
+            },
+            {
+              "id": "s4",
+              "kind": "web",
+              "title": "Agent Harness Engineering | AddyOsmani.com",
+              "url": "https://addyosmani.com/blog/agent-harness-engineering",
+              "published_at": null,
+              "excerpt": "# Agent Harness Engineering\n\n## April 19, 2026\n\nA coding agent is the model plus everything you build around it. Harness engineering treats that scaffolding as a real artifact, and it tightens every time the agent slips.\n\nRoughly: anytime you find an agent makes a mistake, you take the time to engineer a solution such that the agent never makes that mistake again. [...] This post is my attempt to pull those threads together.\n\n## What is a harness, really?\n\nViv’s one-liner does most of the work:\n\n> Agent = Model + Harness. If you’re not the model, you’re the harness.\n\nA harness is every piece of code, configuration, and execution logic that isn’t the model itself. A raw model is not an agent. It becomes one once a harness gives it state, tool execution, feedback loops, and enforceable constraints.\n\nConcretely, a harness includes: [...] ```\ncoding agent = AI model(s) + harness \n```\n\nThis equation, articulated by Viv and echoed by HumanLayer, is where the work actually lives. The debate over the left-hand side is loud. Most of the actual leverage sits on the right.\n\n## The “skill issue” reframe\n\nThere’s a pattern I watch engineers fall into. The agent does something dumb, the engineer blames the model, and the blame gets filed under “wait for the next version.”"
+            },
+            {
+              "id": "s5",
+              "kind": "web",
+              "title": "Harness Engineering: A Guide to AI Coding Agents | Faros",
+              "url": "https://www.faros.ai/blog/harness-engineering",
+              "published_at": null,
+              "excerpt": "AI Industry\n\n# Harness engineering: A guide to building better AI coding agents\n\nAgent = Model + Harness. Harness engineering is what makes AI agents reliable in production. See the five layers and the metrics that matter.\n\nAbout the Company\n\nIndustry\n\nAI icon within a fence (harness) on red background\n\nChapters\n\nHeading 2\n\nHeading 3\n\nHeading 4\n\nCopy link to blog post entry\n\nCopied!\n\nCopied!\n\nAI\n\nCoding\n\nContext\n\nData Engineering\n\nLeaders\n\nManagers\n\nMetrics [...] Introducing Token Engineering: visibility + control for your AI coding spend.\n\nread more\n\nAI Industry\n\n15\n\nmin read\n\nMay 22, 2026\n\n# Harness engineering: A guide to building better AI coding agents\n\nAgent = Model + Harness. Harness engineering is what makes AI agents reliable in production. See the five layers and the metrics that matter.\n\nNeely Dunlap\n\nBy\n\nNeely Dunlap\n\nAI icon within a fence (harness) on red background\n\nAI Industry [...] As AI agents take on more engineering work, the question leaders need to answer is whether the model-harness-human dynamics are producing strong, safe code at a reasonable cost. A quick definition before the metrics: In this section, a task is a piece of engineering work that ends in something a person can review—usually a pull request PR or a closed ticket. Individual chats with the agent and tool calls are the raw material; tasks are what gets shipped. Using the same definition of task"
+            }
+          ],
+          "question_sources": [
+            {
+              "question_id": "q1",
+              "source_ids": [
+                "s3",
+                "s4"
+              ]
+            },
+            {
+              "question_id": "q2",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q3",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q4",
+              "source_ids": [
+                "s3",
+                "s4"
+              ]
+            },
+            {
+              "question_id": "q5",
+              "source_ids": [
+                "s4"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "saved_reference_equal": true
+  }
+]

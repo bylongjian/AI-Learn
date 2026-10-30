@@ -1,0 +1,63 @@
+{
+  "routes": [
+    {
+      "target": "pages/profile/index",
+      "ready": true,
+      "milliseconds": 2118,
+      "identity": 0,
+      "stack": [
+        "pages/profile/index"
+      ]
+    },
+    {
+      "target": "pages/library/index",
+      "ready": true,
+      "milliseconds": 398,
+      "identity": 1,
+      "stack": [
+        "pages/library/index"
+      ]
+    },
+    {
+      "target": "pages/index/index",
+      "ready": true,
+      "milliseconds": 383,
+      "identity": 2,
+      "stack": [
+        "pages/index/index"
+      ]
+    },
+    {
+      "target": "pages/library/index",
+      "ready": true,
+      "milliseconds": 274,
+      "identity": 1,
+      "stack": [
+        "pages/library/index"
+      ]
+    },
+    {
+      "target": "pages/profile/index",
+      "ready": true,
+      "milliseconds": 230,
+      "identity": 0,
+      "stack": [
+        "pages/profile/index"
+      ]
+    },
+    {
+      "target": "pages/index/index",
+      "ready": true,
+      "milliseconds": 265,
+      "identity": 2,
+      "stack": [
+        "pages/index/index"
+      ]
+    }
+  ],
+  "animations": [],
+  "learning_data_unchanged": true,
+  "exceptions": [],
+  "console_logs": [],
+  "render_log_capture": "not available: optional CDP enable timed out"
+}

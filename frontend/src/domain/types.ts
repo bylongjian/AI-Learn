@@ -17,6 +17,15 @@ export interface Quiz {
   source_type: 'text'
   user_input: string
   questions: Question[]
+  reference?: QuizReference | null
+}
+export interface KnowledgeSource {
+  id: string; kind: 'web' | 'user_text'; title: string; url: string | null
+  published_at: string | null; excerpt: string
+}
+export interface QuizReference {
+  topic: string; retrieved_at: string; sources: KnowledgeSource[]
+  question_sources: { question_id: string; source_ids: string[] }[]
 }
 export interface AnswerRecord {
   question_id: string

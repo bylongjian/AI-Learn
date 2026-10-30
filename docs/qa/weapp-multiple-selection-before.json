@@ -1,0 +1,9 @@
+{
+  "environment": "official WeChat simulator, real generated quiz",
+  "quiz_id": "2478f82a-91f7-44f5-a1a5-6f491d84b828",
+  "question_id": "q4",
+  "expected_selection_after_three_rapid_taps": ["A", "B", "C"],
+  "actual_saved_selection": ["C"],
+  "actual_is_correct": false,
+  "source": "SDK readback before the fix"
+}

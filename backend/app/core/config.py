@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     deepseek_base_url: str = "https://api.deepseek.com"
     generation_timeout_seconds: float = Field(default=45, gt=0, le=45)
     generation_retries: int = Field(default=1, ge=0, le=2)
+    tavily_api_key: SecretStr | None = None
+    enable_web_search: bool = True
+    knowledge_timeout_seconds: float = Field(default=25, gt=0, le=45)
+    quiz_build_timeout_seconds: float = Field(default=25, gt=0, le=45)
+    quiz_request_timeout_seconds: float = Field(default=55, gt=0, le=55)
+    knowledge_max_tool_calls: int = Field(default=4, ge=1, le=4)
+    knowledge_max_context_chars: int = Field(default=12000, ge=1000, le=12000)
     rate_limit_requests: int = Field(default=20, ge=1, le=10000)
     rate_limit_window_seconds: float = Field(default=60, gt=0)
     rate_limit_max_clients: int = Field(default=1024, ge=1, le=100000)
@@ -32,6 +39,12 @@ class Settings(BaseSettings):
     def validate_development_login(self):
         if self.dev_login_enabled and self.app_env != "development":
             raise ValueError("Development login is allowed only in development")
+        return self
+
+    @model_validator(mode="after")
+    def validate_quiz_budgets(self):
+        if self.knowledge_timeout_seconds + self.quiz_build_timeout_seconds >= self.quiz_request_timeout_seconds:
+            raise ValueError("Quiz stages must leave time for storage within the request deadline")
         return self
 
     @field_validator("deepseek_base_url")

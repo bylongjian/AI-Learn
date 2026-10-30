@@ -17,11 +17,15 @@ async def health():
 
 @router.post("/quiz/generate")
 async def generate_quiz(payload: QuizRequest, request: Request, response: Response, identity: Identity | None = Depends(optional_identity)):
-    quiz = await request.app.state.quiz_service.generate(payload)
-    if identity is not None:
-        await request.app.state.user_repository.save_quiz(identity.user_id, quiz)
-        response.headers["X-Learning-User"] = identity.user_id
-    return {"code": 0, "message": "ok", "data": quiz.model_dump()}
+    try:
+        async with asyncio.timeout(request.app.state.settings.quiz_request_timeout_seconds):
+            quiz = await request.app.state.quiz_service.generate(payload)
+            if identity is not None:
+                await request.app.state.user_repository.save_quiz(identity.user_id, quiz)
+                response.headers["X-Learning-User"] = identity.user_id
+            return {"code": 0, "message": "ok", "data": quiz.model_dump()}
+    except TimeoutError:
+        raise AppError(50401, "题库生成请求超时，请重试", 504) from None
 
 
 @router.post("/report/generate")

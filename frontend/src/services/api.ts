@@ -15,6 +15,19 @@ export class ApiError extends Error {
   constructor(message: string, public statusCode: number, public code?: number) { super(message) }
 }
 
+export interface TopicOption { label: string; description: string }
+export class TopicClarificationError extends ApiError {
+  constructor(message: string, public options: TopicOption[]) { super(message, 409, 40902) }
+}
+function clarificationOptions(value: unknown): TopicOption[] {
+  const options = (value as { options?: unknown })?.options
+  if (!Array.isArray(options) || options.length < 2 || options.length > 4 ||
+    !options.every(option => option && typeof option.label === 'string' && !!option.label.trim() && Array.from(option.label).length <= 40 &&
+      typeof option.description === 'string' && !!option.description.trim() && Array.from(option.description).length <= 150) ||
+    new Set(options.map(option => option.label)).size !== options.length) throw new ApiError('领域选项不完整，请补充具体领域后重试。', 409, 40902)
+  return options.map(({ label, description }) => ({ label, description }))
+}
+
 export function createApi(request: Request, baseUrl: string, auth?: Auth) {
   function send<T>(method: RequestOptions['method'], path: string, data: unknown, validate: (value: unknown) => T, publicRequest = false, expectedUserId?: string | null): Pending<T> {
     const identity = publicRequest ? null : auth?.credentials() || null
@@ -27,6 +40,9 @@ export function createApi(request: Request, baseUrl: string, auth?: Auth) {
       const body = response.data
       if (response.statusCode < 200 || response.statusCode >= 300 || !body || body.code !== 0) {
         if (response.statusCode === 401 && identity) auth?.onUnauthorized?.(identity.token)
+        if (path === 'quiz/generate' && response.statusCode === 409 && body?.code === 40902) {
+          throw new TopicClarificationError('这个主题有多个含义，请选择你想学习的领域。', clarificationOptions(body.data))
+        }
         throw new ApiError(typeof body?.message === 'string' ? body.message.slice(0, 200) : '请求失败，请稍后重试。', response.statusCode, body?.code)
       }
       if (identity && (path === 'quiz/generate' || path === 'report/generate')) {
@@ -63,10 +79,11 @@ export function createApi(request: Request, baseUrl: string, auth?: Auth) {
     getQuizDetail(quizId: string, expectedUserId?: string) {
       return send('GET', `user/quizzes/${encodeURIComponent(quizId)}`, undefined, value => validateCloudDetail(value, quizId), false, expectedUserId)
     },
-    generateQuiz(input: string, expectedUserId?: string | null): Pending<Quiz> {
+    generateQuiz(input: string, expectedUserId?: string | null, topicContext?: string): Pending<Quiz> {
       const error = validateTopic(input)
       if (error) throw new Error(error)
-      return send('POST', 'quiz/generate', { user_input: input, question_count: 5, difficulty: 'mixed' }, value => {
+      if (topicContext !== undefined && (!topicContext.trim() || Array.from(topicContext).length > 200 || /[\x00-\x1f\x7f]/.test(topicContext))) throw new Error('领域描述不正确，请重新选择。')
+      return send('POST', 'quiz/generate', { user_input: input, question_count: 5, difficulty: 'mixed', ...(topicContext ? { topic_context: topicContext.trim() } : {}) }, value => {
         if (!isQuiz(value)) throw new Error('题库格式不正确，请重新生成。')
         return value
       }, false, expectedUserId)

@@ -89,6 +89,11 @@ async def initialize_schema(database: Database):
                 AND COLUMN_NAME='user_id' AND SEQ_IN_INDEX=1 LIMIT 1""")
             if await cursor.fetchone() is None:
                 await cursor.execute("ALTER TABLE answer_records ADD INDEX answer_user (user_id)")
+            await cursor.execute("""SELECT COLUMN_NAME FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='quiz_sessions' AND COLUMN_NAME='reference'""")
+            if await cursor.fetchone() is None:
+                migration = Path(__file__).resolve().parent.parent / "sql" / "002_quiz_reference.sql"
+                await cursor.execute(migration.read_text(encoding="utf-8").strip().rstrip(";"))
 
 
 def utc(value):
@@ -147,9 +152,9 @@ class UserRepository:
     async def save_quiz(self, user_id: str, quiz: Quiz):
         async with self.database.connection() as conn:
             async with conn.cursor() as cursor:
-                await cursor.execute("""INSERT INTO quiz_sessions (quiz_id,user_id,title,summary,user_input,questions)
-                    VALUES (%s,%s,%s,%s,%s,%s)""", (quiz.quiz_id, user_id, quiz.title, quiz.summary, quiz.user_input,
-                                                           dump([q.model_dump() for q in quiz.questions])))
+                await cursor.execute("""INSERT INTO quiz_sessions (quiz_id,user_id,title,summary,user_input,questions,`reference`)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s)""", (quiz.quiz_id, user_id, quiz.title, quiz.summary, quiz.user_input,
+                            dump([q.model_dump() for q in quiz.questions]), dump(quiz.reference.model_dump()) if quiz.reference else None))
 
     async def get_quiz(self, user_id: str, quiz_id: str):
         async with self.database.connection() as conn:
@@ -161,7 +166,8 @@ class UserRepository:
         if row is None:
             raise AppError(40401, "未找到该练习", 404)
         quiz = {"quiz_id": row["quiz_id"], "source_type": "text", "title": row["title"], "summary": row["summary"],
-                "user_input": row["user_input"], "questions": json.loads(row["questions"])}
+                "user_input": row["user_input"], "questions": json.loads(row["questions"]),
+                "reference": json.loads(row["reference"]) if row["reference"] else None}
         return {"quiz": quiz, "answer_records": json.loads(row["records"]) if row["records"] else [],
                 "report": json.loads(row["report"]) if row["report"] else None, "created_at": utc(row["created_at"])}
 

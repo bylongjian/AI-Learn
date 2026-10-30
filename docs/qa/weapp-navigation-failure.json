@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "navigation_failure_feedback": true,
+  "can_retry_after_failure": true,
+  "boundary": "mocked navigation failure; real retry",
+  "runtime_exceptions": []
+}

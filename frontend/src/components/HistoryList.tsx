@@ -1,6 +1,5 @@
-import Taro from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { Btn, Icon } from './common'
+import { Btn, goReport, Icon } from './common'
 import type { HistoryRow } from '../history/store'
 import type { HistorySnapshot } from '../history/store'
 
@@ -9,7 +8,7 @@ export function historyTime(value: string) {
   return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
 }
 export function ReportRows({ rows, from }: { rows: HistoryRow[]; from: 'index' | 'profile' }) {
-  return <View className='list-surface'>{rows.map(row => <Btn className='report-row' key={row.quiz_id} onClick={() => { void Taro.navigateTo({ url: `/pages/report/index?id=${encodeURIComponent(row.quiz_id)}&from=${from}` }) }}><View><View className='row-title'>{row.title}</View><View className='row-detail'>{row.correct_count} / {row.question_count} 题 · {row.accuracy}% · {historyTime(row.created_at)}{row.local && !row.local.report ? ' · 报告待同步' : ''}</View></View><Icon name='right' /></Btn>)}</View>
+  return <View className='list-surface'>{rows.map(row => <Btn className='report-row' key={row.quiz_id} onClick={() => { void goReport(row.quiz_id, from) }}><View><View className='row-title'>{row.title}</View><View className='row-detail'>{row.correct_count} / {row.question_count} 题 · {row.accuracy}% · {historyTime(row.created_at)}{row.local && !row.local.report ? ' · 报告待同步' : ''}</View></View><Icon name='right' /></Btn>)}</View>
 }
 export function HistoryFeedback({ history }: { history: HistorySnapshot & { refresh(): void; loadMore(): void } }) {
   return <>

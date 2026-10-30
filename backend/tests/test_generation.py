@@ -1,6 +1,6 @@
 import asyncio
 import pytest
-from tests.factories import quiz_content, report_request, report_text
+from tests.factories import quiz_content, report_request, report_text, FixedKnowledge
 
 
 class SequenceProvider:
@@ -19,6 +19,23 @@ class SequenceProvider:
         return result
 
 
+class GroundedSequenceProvider(SequenceProvider):
+    """Script business generations; supply a separate evidence-review boundary.
+
+    calls/messages intentionally count only the scripted quiz/report attempts.
+    Evidence correctness and review failure paths have dedicated integration tests.
+    """
+    async def complete(self, schema, messages):
+        if schema.__name__ == "EvidenceReview":
+            return {"questions": [{"question_id": question["id"], "passed": True, "issue": "",
+                "evidence": [{"source_id": "s1", "quote": "Reference material for the learning topic."}]} for question in self.last_questions]}
+        result = await super().complete(schema, messages)
+        if schema.__name__ == "GroundedQuizContent" and isinstance(result, dict) and isinstance(result.get("questions"), list):
+            self.last_questions = result["questions"]
+            return {**result, "question_sources": [{"question_id": q["id"], "source_ids": ["s1"]} for q in result["questions"]]}
+        return result
+
+
 def components(provider, **settings):
     from app.core.config import Settings
     from app.core.content import ContentGuard
@@ -32,9 +49,9 @@ def components(provider, **settings):
 async def test_quiz_generates_exact_distribution_with_source(count):
     from app.models.quiz import QuizRequest
     from app.services.quiz import QuizService
-    provider = SequenceProvider(quiz_content(count))
+    provider = GroundedSequenceProvider(quiz_content(count))
     generator, guard = components(provider)
-    quiz = await QuizService(generator, guard).generate(QuizRequest(user_input="Python", question_count=count))
+    quiz = await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python", question_count=count))
     assert len(quiz.questions) == count
     assert [q.type for q in quiz.questions].count("single") == count - 2
     assert quiz.source_type == "text" and quiz.user_input == "Python" and quiz.quiz_id
@@ -49,9 +66,9 @@ async def test_quiz_generates_exact_distribution_with_source(count):
 async def test_invalid_generation_retries_then_returns_valid_quiz(bad):
     from app.models.quiz import QuizRequest
     from app.services.quiz import QuizService
-    provider = SequenceProvider(bad, quiz_content())
+    provider = GroundedSequenceProvider(bad, quiz_content())
     generator, guard = components(provider)
-    result = await QuizService(generator, guard).generate(QuizRequest(user_input="Python"))
+    result = await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python"))
     assert result.title == "学习小测"
     assert provider.calls == 2
 
@@ -59,9 +76,9 @@ async def test_invalid_generation_retries_then_returns_valid_quiz(bad):
 async def test_retry_adds_conservative_json_schema_instructions_without_echoing_bad_output():
     from app.models.quiz import QuizRequest
     from app.services.quiz import QuizService
-    provider = SequenceProvider(ValueError("sensitive malformed model output"), quiz_content())
+    provider = GroundedSequenceProvider(ValueError("sensitive malformed model output"), quiz_content())
     generator, guard = components(provider)
-    await QuizService(generator, guard).generate(QuizRequest(user_input="Python"))
+    await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python"))
     assert provider.calls == 2
     correction = provider.messages[-1].content
     assert "重试要求" in correction and "JSON" in correction and "schema" in correction
@@ -74,9 +91,9 @@ async def test_wrong_type_distribution_and_difficulty_are_retried():
     from app.services.quiz import QuizService
     bad = quiz_content()
     bad["questions"][0] = {**bad["questions"][0], "type": "multiple", "answer": ["A", "B"]}
-    provider = SequenceProvider(bad, quiz_content())
+    provider = GroundedSequenceProvider(bad, quiz_content())
     generator, guard = components(provider)
-    assert (await QuizService(generator, guard).generate(QuizRequest(user_input="Python", difficulty="easy"))).questions
+    assert (await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python", difficulty="easy"))).questions
     assert provider.calls == 2
 
 
@@ -84,10 +101,10 @@ async def test_requested_difficulty_is_validated_before_accepting_output():
     from app.models.quiz import QuizRequest
     from app.services.quiz import QuizService
     from app.core.errors import AppError
-    provider = SequenceProvider(quiz_content())
+    provider = GroundedSequenceProvider(quiz_content())
     generator, guard = components(provider)
     with pytest.raises(AppError):
-        await QuizService(generator, guard).generate(QuizRequest(user_input="Python", difficulty="hard"))
+        await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python", difficulty="hard"))
     assert provider.calls == 2
 
 
@@ -98,9 +115,9 @@ async def test_nonmixed_prompt_explicitly_requires_every_question_to_match_diffi
     content = quiz_content(4)
     for question in content["questions"]:
         question["difficulty"] = difficulty
-    provider = SequenceProvider(content)
+    provider = GroundedSequenceProvider(content)
     generator, guard = components(provider)
-    await QuizService(generator, guard).generate(QuizRequest(user_input="Python 字典", question_count=4, difficulty=difficulty))
+    await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python 字典", question_count=4, difficulty=difficulty))
     instruction = "\n".join(message.content for message in provider.messages)
     assert f'每道题的 difficulty 必须严格等于 "{difficulty}"' in instruction
     assert "不得混合其他难度" in instruction
@@ -114,10 +131,10 @@ async def test_observed_mixed_difficulties_remain_rejected_with_safe_metadata(ca
     for question, difficulty in zip(content["questions"], ["easy", "medium", "medium", "hard"]):
         question["difficulty"] = difficulty
         question["stem"] = "private_learning_material"
-    provider = SequenceProvider(content)
+    provider = GroundedSequenceProvider(content)
     generator, guard = components(provider)
     with pytest.raises(AppError):
-        await QuizService(generator, guard).generate(QuizRequest(user_input="Python 字典", question_count=4, difficulty="medium"))
+        await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python 字典", question_count=4, difficulty="medium"))
     assert provider.calls == 2
     assert "reason=difficulty_mismatch" in caplog.text
     assert "expected_difficulty=medium" in caplog.text
@@ -131,10 +148,10 @@ async def test_schema_rejection_logs_only_fixed_types_without_model_inputs(caplo
     from app.core.errors import AppError
     content = quiz_content()
     content["questions"][0]["stem"] = {"private_content": "sensitive_model_input"}
-    provider = SequenceProvider(content)
+    provider = GroundedSequenceProvider(content)
     generator, guard = components(provider)
     with pytest.raises(AppError):
-        await QuizService(generator, guard).generate(QuizRequest(user_input="Python"))
+        await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python"))
     assert "schema_error_types=" in caplog.text
     assert "string_type" in caplog.text
     assert "questions" not in caplog.text and "stem" not in caplog.text
@@ -149,10 +166,10 @@ async def test_schema_extra_key_never_appears_in_diagnostic_logs(caplog, nested)
     content = quiz_content()
     target = content["questions"][0] if nested else content
     target["PRIVATE_LEARNING_CONTENT_AS_UNEXPECTED_KEY"] = "private model value"
-    provider = SequenceProvider(content)
+    provider = GroundedSequenceProvider(content)
     generator, guard = components(provider)
     with pytest.raises(AppError):
-        await QuizService(generator, guard).generate(QuizRequest(user_input="Python"))
+        await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python"))
     assert "extra_forbidden" in caplog.text
     assert "PRIVATE_LEARNING_CONTENT_AS_UNEXPECTED_KEY" not in caplog.text
     assert "private model value" not in caplog.text
@@ -167,10 +184,10 @@ async def test_custom_validation_error_type_and_message_are_not_trusted_log_cont
     secret = "PRIVATE_CUSTOM_ERROR"
     failure = ValidationError.from_exception_data("private schema", [{
         "type": PydanticCustomError(secret, secret), "loc": (secret,), "input": secret}])
-    provider = SequenceProvider(failure)
+    provider = GroundedSequenceProvider(failure)
     generator, guard = components(provider)
     with pytest.raises(AppError):
-        await QuizService(generator, guard).generate(QuizRequest(user_input="Python"))
+        await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python"))
     assert "validation_error" in caplog.text and secret not in caplog.text
 
 
@@ -178,10 +195,10 @@ async def test_exhausted_bad_generation_returns_safe_retryable_error(caplog):
     from app.models.quiz import QuizRequest
     from app.services.quiz import QuizService
     from app.core.errors import AppError
-    provider = SequenceProvider(ValueError("secret-key-and-user-content"))
+    provider = GroundedSequenceProvider(ValueError("secret-key-and-user-content"))
     generator, guard = components(provider)
     with pytest.raises(AppError) as exc:
-        await QuizService(generator, guard).generate(QuizRequest(user_input="Python"))
+        await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python"))
     assert exc.value.status_code == 503
     assert "重试" in exc.value.message
     assert "secret-key-and-user-content" not in caplog.text
@@ -192,11 +209,11 @@ async def test_total_timeout_includes_all_attempts():
     from app.models.quiz import QuizRequest
     from app.services.quiz import QuizService
     from app.core.errors import AppError
-    provider = SequenceProvider("slow")
+    provider = GroundedSequenceProvider("slow")
     generator, guard = components(provider, generation_timeout_seconds=0.02)
     start = asyncio.get_running_loop().time()
     with pytest.raises(AppError) as exc:
-        await QuizService(generator, guard).generate(QuizRequest(user_input="Python"))
+        await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python"))
     assert asyncio.get_running_loop().time() - start < 0.5
     assert exc.value.status_code == 504
 
@@ -205,10 +222,10 @@ async def test_last_attempt_timeout_returns_gateway_timeout():
     from app.models.quiz import QuizRequest
     from app.services.quiz import QuizService
     from app.core.errors import AppError
-    provider = SequenceProvider({}, "slow")
+    provider = GroundedSequenceProvider({}, "slow")
     generator, guard = components(provider, generation_timeout_seconds=0.1)
     with pytest.raises(AppError) as exc:
-        await QuizService(generator, guard).generate(QuizRequest(user_input="Python"))
+        await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python"))
     assert exc.value.status_code == 504 and provider.calls == 2
 
 
@@ -218,10 +235,10 @@ async def test_provider_failures_retry_only_when_safe(retryable, calls):
     from app.services.quiz import QuizService
     from app.llm.provider import ProviderFailure
     from app.core.errors import AppError
-    provider = SequenceProvider(ProviderFailure(retryable=retryable))
+    provider = GroundedSequenceProvider(ProviderFailure(retryable=retryable))
     generator, guard = components(provider)
     with pytest.raises(AppError):
-        await QuizService(generator, guard).generate(QuizRequest(user_input="Python"))
+        await QuizService(generator, guard, FixedKnowledge()).generate(QuizRequest(user_input="Python"))
     assert provider.calls == calls
 
 
@@ -229,9 +246,9 @@ async def test_content_screening_runs_before_provider_and_on_generated_output():
     from app.models.quiz import QuizRequest
     from app.services.quiz import QuizService
     from app.core.errors import AppError
-    provider = SequenceProvider({**quiz_content(), "title": "blocked"})
+    provider = GroundedSequenceProvider({**quiz_content(), "title": "blocked"})
     generator, guard = components(provider, blocked_terms=["blocked"])
-    service = QuizService(generator, guard)
+    service = QuizService(generator, guard, FixedKnowledge())
     with pytest.raises(AppError):
         await service.generate(QuizRequest(user_input="blocked"))
     assert provider.calls == 0
@@ -243,7 +260,7 @@ async def test_content_screening_runs_before_provider_and_on_generated_output():
 async def test_report_preserves_server_stats_and_no_invented_weak_points():
     from app.models.report import ReportRequest
     from app.services.report import ReportService
-    provider = SequenceProvider(report_text())
+    provider = GroundedSequenceProvider(report_text())
     generator, guard = components(provider)
     report = await ReportService(generator, guard).generate(ReportRequest.model_validate(report_request()))
     assert report.accuracy == 100 and report.xp == 50 and report.weak_points == []
@@ -255,7 +272,7 @@ async def test_report_preserves_server_stats_and_no_invented_weak_points():
 async def test_ai_cannot_override_report_statistics():
     from app.models.report import ReportRequest
     from app.services.report import ReportService
-    provider = SequenceProvider({**report_text(), "accuracy": 1}, report_text())
+    provider = GroundedSequenceProvider({**report_text(), "accuracy": 1}, report_text())
     generator, guard = components(provider)
     report = await ReportService(generator, guard).generate(ReportRequest.model_validate(report_request()))
     assert report.accuracy == 100 and provider.calls == 2
@@ -265,7 +282,7 @@ async def test_report_failure_raises_instead_of_fabricating_result():
     from app.models.report import ReportRequest
     from app.services.report import ReportService
     from app.core.errors import AppError
-    provider = SequenceProvider({**report_text(), "three_line_summary": ["one"]})
+    provider = GroundedSequenceProvider({**report_text(), "three_line_summary": ["one"]})
     generator, guard = components(provider)
     with pytest.raises(AppError):
         await ReportService(generator, guard).generate(ReportRequest.model_validate(report_request()))

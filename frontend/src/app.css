@@ -3,10 +3,17 @@ page { height:100%; background:#fff9f5; }
 body { margin:0; }
 button { margin:0; padding:0; font-family:inherit; border:0; }
 button::after { border:0; }
+.button-pressed { opacity:.72; }
 .app-shell { height:100vh; display:flex; flex-direction:column; position:relative; overflow:hidden; background:var(--page); font-size:16px; line-height:normal; }
 taro-button-core { margin:0; padding:0; width:auto; font-family:inherit; }
 taro-button-core + taro-button-core { margin-top:0; }
 .native-status { height:var(--status-height,24px); flex-shrink:0; }
+.page-slide-a { animation:page-slide-a 240ms cubic-bezier(.22,.61,.36,1) both; }
+.page-slide-b { animation:page-slide-b 240ms cubic-bezier(.22,.61,.36,1) both; }
+/* 左右整页滑入；切换名称重播缓存页动画，保留表单和学习状态。 */
+@keyframes page-slide-a { from { transform:translateX(var(--page-slide-x)); } to { transform:translateX(0); } }
+@keyframes page-slide-b { from { transform:translateX(var(--page-slide-x)); } to { transform:translateX(0); } }
+@media (prefers-reduced-motion: reduce) { .page-slide-a,.page-slide-b { animation:none; } }
 .weapp-shell .app-header { height:var(--nav-height,44px); }
 .weapp-shell .home-area { height:var(--bottom-inset,0px); }
 .weapp-shell .home-area::after { display:none; }
@@ -49,3 +56,16 @@ taro-button-core + taro-button-core { margin-top:0; }
 .account-buttons { display:flex; gap:10px; margin:10px 0; }
 .account-button { flex:1; min-height:40px; font-size:12px; color:var(--brand); background:var(--brand-soft); border-radius:10px; padding:9px; }
 .nickname-input { height:44px; padding:9px 12px; border:1px solid var(--border); border-radius:10px; margin-bottom:16px; font-size:16px; background:white; }
+.domain-options { display:flex; flex-direction:column; gap:12px; margin-top:24px; }
+.domain-option { width:100%; min-height:112px; padding:18px; border:1px solid #d6c4b6; border-radius:14px; background:#fffdf9; text-align:left; white-space:normal; line-height:1.5; }
+.domain-option:focus-visible { outline:3px solid #985d39; outline-offset:3px; }
+.domain-option-title { color:#342a24; font-size:17px; font-weight:600; }
+.domain-option-description { margin-top:6px; color:#62615e; font-size:14px; }
+.domain-option-action { display:flex; align-items:center; gap:6px; margin-top:12px; color:#985d39; font-size:14px; }
+.question-references { margin:16px 0; }
+.reference-toggle,.reference-copy { min-height:44px; padding:10px 0; text-align:left; color:#985d39; background:transparent; font-size:14px; line-height:1.6; }
+.reference-card { margin-top:12px; padding:14px; border:1px solid #ded4cb; border-radius:12px; background:#fffdf9; }
+.reference-title { color:#342a24; font-size:15px; font-weight:600; overflow-wrap:anywhere; }
+.reference-meta,.reference-time,.reference-empty { margin:8px 0; color:#62615e; font-size:12px; line-height:1.6; }
+.reference-excerpt { display:block; margin-top:10px; color:#49413b; font-size:14px; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; }
+.reference-url { display:block; margin-top:10px; color:#62615e; font-size:12px; line-height:1.6; overflow-wrap:anywhere; }

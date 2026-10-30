@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import Taro from '@tarojs/taro'
+import Taro, { useDidHide } from '@tarojs/taro'
 import { Input, Text, View } from '@tarojs/components'
 import AppShell from '../../components/AppShell'
-import { Btn, Empty, Icon, newTopic } from '../../components/common'
+import { Btn, Empty, goReport, Icon, newTopic } from '../../components/common'
 import { HistoryFeedback, historyTime } from '../../components/HistoryList'
 import { getStats } from '../../domain/learning'
 import { localHistoryItem } from '../../domain/cloud'
@@ -19,7 +19,9 @@ export default function Library() {
   const [search, setSearch] = useState(''); const [filter, setFilter] = useState<HistoryStatus>('all')
   const history = useCloudHistory({ search, status: filter }); const [opening, setOpening] = useState(''); const [openError, setOpenError] = useState('')
   const openAttempt = useRef(0); const currentRequest = useRef<{ cancel(): void } | null>(null)
-  useEffect(() => { setOpening(''); setOpenError(''); return () => { openAttempt.current++; currentRequest.current?.cancel() } }, [userId])
+  function stopOpening() { openAttempt.current++; currentRequest.current?.cancel(); currentRequest.current = null; setOpening('') }
+  useEffect(() => { setSearch(''); setFilter('all'); setOpening(''); setOpenError(''); return stopOpening }, [userId])
+  useDidHide(stopOpening)
   const sessions = saved.sessions; const completed = sessions.filter(s => s.status === 'completed').length
   const local = sessions.map(session => ({ ...localHistoryItem(session), local: session })).filter(row => row.title.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()) && (filter === 'all' || (filter === 'completed' ? row.status === 'completed' : row.status !== 'completed')))
   const combined = combineHistory(history.items, sessions, { search, status: filter }, !!history.error)
@@ -27,13 +29,13 @@ export default function Library() {
   function clear() { setSearch(''); setFilter('all') }
   async function open(row: HistoryRow) {
     if (opening) return
-    if (row.status === 'completed') { void Taro.navigateTo({ url: `/pages/report/index?id=${encodeURIComponent(row.quiz_id)}&from=library` }); return }
+    if (row.status === 'completed') { void goReport(row.quiz_id, 'library'); return }
     const attempt = ++openAttempt.current; const scope = learningStore.getScope(); setOpening(row.quiz_id); setOpenError('')
     try {
       const request = sessionAccess.read(row.quiz_id, scope); currentRequest.current = request
       const session = await request.promise
       if (attempt !== openAttempt.current || scope !== learningStore.getScope()) return
-      if (session.status === 'completed') { void Taro.navigateTo({ url: `/pages/report/index?id=${encodeURIComponent(row.quiz_id)}&from=library` }); return }
+      if (session.status === 'completed') { void goReport(row.quiz_id, 'library'); return }
       if (session.status === 'not-started') learningStore.saveSession({ ...session, status: 'in-progress', updated_at: new Date().toISOString() }, scope)
       void Taro.navigateTo({ url: `/pages/quiz/index?id=${encodeURIComponent(row.quiz_id)}` })
     } catch (failure) { if (attempt === openAttempt.current) setOpenError(failure instanceof Error ? failure.message : '暂时无法打开关卡，请重试。') }

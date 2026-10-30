@@ -1,7 +1,7 @@
 import httpx
 import pytest
-from tests.factories import quiz_content, report_request, report_text
-from tests.test_generation import SequenceProvider
+from tests.factories import quiz_content, report_request, report_text, FixedKnowledge
+from tests.test_generation import GroundedSequenceProvider as SequenceProvider
 
 
 @pytest.fixture
@@ -10,7 +10,7 @@ def make_client():
         from app.main import create_app
         from app.core.config import Settings
         config = Settings(_env_file=None, **settings)
-        app = create_app(config, provider=provider or SequenceProvider(quiz_content()))
+        app = create_app(config, provider=provider or SequenceProvider(quiz_content()), knowledge_service=FixedKnowledge())
         return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test")
     return build
 
@@ -115,7 +115,7 @@ async def test_generated_content_rejection_and_validation_include_cors(make_clie
 async def test_ip_quota_isolated_and_forwarded_header_does_not_bypass_it():
     from app.main import create_app
     from app.core.config import Settings
-    app = create_app(Settings(_env_file=None, rate_limit_requests=1), SequenceProvider(quiz_content()))
+    app = create_app(Settings(_env_file=None, rate_limit_requests=1), SequenceProvider(quiz_content()), knowledge_service=FixedKnowledge())
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app, client=("192.0.2.1", 123)), base_url="http://test") as first:
         assert (await first.post("/api/v1/quiz/generate", json={"user_input": "Python"})).status_code == 200
         response = await first.post("/api/v1/quiz/generate", json={"user_input": "Python"}, headers={"x-forwarded-for": "192.0.2.2"})

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro, { useDidHide, useDidShow } from '@tarojs/taro'
 import { Image, Input, Text, View } from '@tarojs/components'
 import AppShell from '../../components/AppShell'
 import AccountControls from '../../components/AccountControls'
@@ -21,6 +21,7 @@ export default function Profile() {
   const [editing, setEditing] = useState(false); const [nickname, setNickname] = useState(''); const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
   const [editingUser, setEditingUser] = useState('')
   useDidShow(() => { void authStore.initialize().then(() => authStore.refreshProfile()) })
+  useDidHide(() => { setEditing(false); setNickname(''); setError('') })
   function validateName(value: string) {
     return !value.trim() ? '请输入昵称。' : Array.from(value.trim()).length > 100 ? '昵称最多 100 字。' : /[\u0000-\u001f\u007f]/.test(value) ? '昵称不能包含换行或控制字符。' : ''
   }
@@ -36,7 +37,7 @@ export default function Profile() {
     } catch (failure) { setError(failure instanceof Error ? failure.message : '保存失败，请重试。') }
     finally { setSaving(false) }
   }
-  const overlay = editing && <View className='screen-overlay'><View className='screen-dialog'>
+  const overlay = editing && editingUser === user?.id && <View className='screen-overlay'><View className='screen-dialog'>
     <View className='dialog-title'>修改昵称</View><View className='field-label'>昵称</View>
     <Input className='nickname-input' ariaLabel='昵称' value={nickname} maxlength={100} focus onInput={event => { setNickname(event.detail.value); if (error) setError(validateName(event.detail.value)) }} onBlur={() => setError(validateName(nickname))} />
     {error && <View className='field-error'>{error}</View>}

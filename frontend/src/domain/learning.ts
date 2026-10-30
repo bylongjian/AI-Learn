@@ -28,9 +28,35 @@ export function isQuiz(value: unknown): value is Quiz {
   if (!object(value) || !safeId(value.quiz_id) || !text(value.title) || !text(value.summary) || value.source_type !== 'text' ||
     !text(value.user_input, 2000) || !Array.isArray(value.questions) || value.questions.length < 3 || value.questions.length > 5 ||
     !value.questions.every(isQuestion) || !unique(value.questions.map((q: Question) => q.id))) return false
+  if (value.reference != null && !isReference(value.reference, value.questions)) return false
   return value.questions.filter((q: Question) => q.type === 'single').length === value.questions.length - 2 &&
     value.questions.filter((q: Question) => q.type === 'multiple').length === 1 &&
     value.questions.filter((q: Question) => q.type === 'judge').length === 1
+}
+
+function isReference(value: unknown, questions: Question[]): boolean {
+  if (!object(value) || !text(value.topic, 4000) || !text(value.retrieved_at, 64) || !Number.isFinite(Date.parse(value.retrieved_at)) ||
+    !/(Z|[+-]\d\d:\d\d)$/.test(value.retrieved_at) || !Array.isArray(value.sources) || value.sources.length < 1 || value.sources.length > 5 ||
+    !Array.isArray(value.question_sources) || value.question_sources.length !== questions.length) return false
+  for (const source of value.sources) {
+    if (!object(source) || !/^s[1-5]$/.test(source.id) || !text(source.title, 300) || !text(source.excerpt, 2000)) return false
+    if (source.kind === 'web') {
+      if (!text(source.url, 2000)) return false
+      const url = /^(https?):\/\/([^/?#\s]+)(?:[/?#][^\s]*)?$/.exec(source.url)
+      if (!url || url[2].includes('@') || source.url.includes('\\')) return false
+      if (source.published_at != null && (!text(source.published_at, 64) || !/^\d{4}-\d\d-\d\d/.test(source.published_at) || !Number.isFinite(Date.parse(source.published_at)))) return false
+    } else if (source.kind !== 'user_text' || source.url != null || source.published_at != null) return false
+  }
+  const sourceIds = value.sources.map((source: any) => source.id)
+  if (!unique(sourceIds)) return false
+  const seen = new Set<string>()
+  for (const association of value.question_sources) {
+    if (!object(association) || !questions.some(q => q.id === association.question_id) || seen.has(association.question_id) ||
+      !Array.isArray(association.source_ids) || !association.source_ids.length || association.source_ids.length > 5 ||
+      !unique(association.source_ids) || !association.source_ids.every((id: unknown) => sourceIds.includes(id))) return false
+    seen.add(association.question_id)
+  }
+  return true
 }
 
 export function createSession(quiz: Quiz): Session {

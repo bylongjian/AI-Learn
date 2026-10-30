@@ -34,6 +34,39 @@ def stored_quiz(quiz_id=None, title="Python", count=3):
     return Quiz(quiz_id=quiz_id or str(uuid4()), source_type="text", user_input="Python", **{**quiz_content(count), "title": title})
 
 
+async def test_quiz_reference_roundtrip_and_owner_isolation(repository):
+    user = await repository.upsert_user("wx-reference-a")
+    other = await repository.upsert_user("wx-reference-b")
+    quiz = stored_quiz()
+    reference = {"topic": "Python", "retrieved_at": "2026-10-28T12:00:00Z",
+                 "sources": [{"id": "s1", "kind": "web", "title": "Guide", "url": "https://example.org/guide", "published_at": None, "excerpt": "Supporting text."}],
+                 "question_sources": [{"question_id": q.id, "source_ids": ["s1"]} for q in quiz.questions]}
+    quiz = Quiz(**{**quiz.model_dump(), "reference": reference})
+    await repository.save_quiz(user["id"], quiz)
+    detail = await repository.get_quiz(user["id"], quiz.quiz_id)
+    assert detail["quiz"]["reference"] == reference
+    history = await repository.list_quizzes(user["id"], 1, 10, "", "all")
+    assert "reference" not in history["items"][0]
+    from app.core.errors import AppError
+    with pytest.raises(AppError):
+        await repository.get_quiz(other["id"], quiz.quiz_id)
+
+
+async def test_reference_migration_upgrades_legacy_quiz_without_data_loss(repository):
+    from app.storage import initialize_schema
+    user = await repository.upsert_user("wx-legacy-reference")
+    quiz = stored_quiz()
+    await repository.save_quiz(user["id"], quiz)
+    async with repository.database.connection() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute("ALTER TABLE quiz_sessions DROP COLUMN `reference`")
+    await initialize_schema(repository.database)
+    await initialize_schema(repository.database)
+    detail = await repository.get_quiz(user["id"], quiz.quiz_id)
+    assert detail["quiz"]["title"] == quiz.title
+    assert detail["quiz"]["reference"] is None
+
+
 def result_for(quiz):
     payload = ReportRequest(quiz_id=quiz.quiz_id, questions=quiz.questions, topic=quiz.title, answer_records=[
         {"question_id": q.id, "selected_answers": q.answer, "is_correct": False, "duration_ms": 1200.0} for q in quiz.questions])

@@ -6,6 +6,7 @@ import { Btn, Empty, goRoot, Icon } from '../../components/common'
 import { advanceSession, getAnswerRecord, getStats, submitAnswer } from '../../domain/learning'
 import type { OptionKey } from '../../domain/types'
 import { learningStore, useLearningStore } from '../../storage'
+import QuestionReferences from '../../components/QuestionReferences'
 
 export default function QuizPage() {
   const { params } = useRouter(); const { saved, storageFailed } = useLearningStore()
@@ -32,8 +33,8 @@ export default function QuizPage() {
       const picked = (record?.selected_answers || selected).includes(option.key)
       const correct = !!record && q.answer.includes(option.key)
       const wrong = !!record && picked && !correct
-      return <Btn key={option.key} className={`answer-option${q.type === 'multiple' ? ' multiple' : ''}${picked && !record ? ' selected' : ''}${correct ? ' correct' : ''}${wrong ? ' wrong' : ''}`} disabled={!!record} onClick={() => setSelected(q.type === 'multiple' ? selected.includes(option.key) ? selected.filter(key => key !== option.key) : [...selected, option.key] : [option.key])}><Text className='option-key'>{option.key}</Text><Text className='option-text'>{option.text}</Text><View className='option-state'>{(correct || wrong) && <Icon name={correct ? 'check' : 'close'} tone={correct ? 'green' : 'red'} />}</View></Btn>
+      return <Btn key={option.key} className={`answer-option${q.type === 'multiple' ? ' multiple' : ''}${picked && !record ? ' selected' : ''}${correct ? ' correct' : ''}${wrong ? ' wrong' : ''}`} disabled={!!record} onClick={() => setSelected(current => q.type === 'multiple' ? current.includes(option.key) ? current.filter(key => key !== option.key) : [...current, option.key] : [option.key])}><Text className='option-key'>{option.key}</Text><Text className='option-text'>{option.text}</Text><View className='option-state'>{(correct || wrong) && <Icon name={correct ? 'check' : 'close'} tone={correct ? 'green' : 'red'} />}</View></Btn>
     })}</View>
-    {record ? <View className='answer-feedback'><View className={`result-line${record.is_correct ? '' : ' wrong'}`}><Icon name={record.is_correct ? 'success' : 'alert'} tone={record.is_correct ? 'green' : 'red'} /><Text>{record.is_correct ? '答对了 · +10 XP' : `这题还差一点 · 正确答案 ${q.answer.join('、')}`}</Text></View><View className='explanation'><View className='explanation-title'>知识讲解</View><View className='explanation-copy'>{q.explanation}</View></View><Btn onClick={next}>{session.current_index === stats.total - 1 ? '完成闯关，查看报告' : '下一题'}</Btn></View> : <View className='answer-submit'><Btn disabled={!selected.length} onClick={submit}>提交答案</Btn><View className='answer-hint'>提交后，立即查看正确答案与知识讲解</View></View>}
+    {record ? <View className='answer-feedback'><View className={`result-line${record.is_correct ? '' : ' wrong'}`}><Icon name={record.is_correct ? 'success' : 'alert'} tone={record.is_correct ? 'green' : 'red'} /><Text>{record.is_correct ? '答对了 · +10 XP' : `这题还差一点 · 正确答案 ${q.answer.join('、')}`}</Text></View><View className='explanation'><View className='explanation-title'>知识讲解</View><View className='explanation-copy'>{q.explanation}</View></View><QuestionReferences key={q.id} quiz={session.quiz} questionId={q.id} /><Btn onClick={next}>{session.current_index === stats.total - 1 ? '完成闯关，查看报告' : '下一题'}</Btn></View> : <View className='answer-submit'><Btn disabled={!selected.length} onClick={submit}>提交答案</Btn><View className='answer-hint'>提交后，立即查看正确答案与知识讲解</View></View>}
   </AppShell>
 }

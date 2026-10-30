@@ -1,0 +1,9 @@
+{
+  "routes": [
+    "pages/index/index"
+  ],
+  "temporary_samples": 0,
+  "test_hooks_cleared": true,
+  "page": "pages/index/index",
+  "header_ready": true
+}

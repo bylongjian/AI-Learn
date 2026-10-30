@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "real_providers": true,
+  "stages": [
+    {
+      "generation": "passed",
+      "seconds": 16.958,
+      "sources": 1
+    },
+    {
+      "answers_and_real_report": "passed",
+      "accuracy": 80,
+      "xp": 40
+    },
+    {
+      "report_reopen": "passed",
+      "report_sources": 5
+    }
+  ],
+  "exceptions": []
+}

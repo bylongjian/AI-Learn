@@ -1,0 +1,880 @@
+[
+  {
+    "path": "topic",
+    "status": 200,
+    "seconds": 34.516,
+    "knowledge_seconds": 22.172,
+    "model_calls": 7,
+    "tool_calls": [
+      {
+        "name": "tavily_search_deep",
+        "seconds": 12.625
+      },
+      {
+        "name": "tavily_search_deep",
+        "seconds": 16.093
+      }
+    ],
+    "structured_calls": [
+      {
+        "schema": "InputAssessment",
+        "seconds": 1.016
+      },
+      {
+        "schema": "KnowledgeDecision",
+        "seconds": 2.781
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "seconds": 4.719
+      },
+      {
+        "schema": "EvidenceReview",
+        "seconds": 2.078
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "seconds": 3.75
+      },
+      {
+        "schema": "EvidenceReview",
+        "seconds": 1.766
+      }
+    ],
+    "decisions": [
+      {
+        "status": "ready",
+        "reason": "五份资料均直接讨论 Harness Engineering，对其定义（围绕模型的非模型层系统：工具、上下文、状态/记忆、护栏）、Agent=Model+Harness 的构成、与提示工程/上下文工程的关系以及术语流行背景有共同且明确的知识点，足以支持 5 道不重复的题目；用户未提出最新性要求，概念稳定，发布日期未知不影响出题。",
+        "topic": "Harness Engineering（AI 智能体运行框架工程）：定义、组成与定位",
+        "source_ids": [
+          "s1",
+          "s2",
+          "s3",
+          "s4",
+          "s5"
+        ],
+        "options": [],
+        "reviews": [
+          {
+            "source_id": "s1",
+            "primary": true,
+            "independent_origin": "Snowflake（snowflake.com 官方 AI engineering 栏目文章）"
+          },
+          {
+            "source_id": "s2",
+            "primary": true,
+            "independent_origin": "MindStudio（mindstudio.ai 官方博客）"
+          },
+          {
+            "source_id": "s3",
+            "primary": true,
+            "independent_origin": "Milvus / Zilliz（milvus.io 官方博客）"
+          },
+          {
+            "source_id": "s4",
+            "primary": true,
+            "independent_origin": "Skillify Solutions（skillifysolutions.com 博客）"
+          },
+          {
+            "source_id": "s5",
+            "primary": true,
+            "independent_origin": "Databricks（databricks.com 官方博客）"
+          }
+        ],
+        "freshness_supported": true,
+        "conflict_free": true
+      }
+    ],
+    "outputs": [
+      {
+        "schema": "InputAssessment",
+        "value": {
+          "is_material": false,
+          "needs_external_verification": false
+        }
+      },
+      {
+        "schema": "KnowledgeDecision",
+        "value": {
+          "status": "ready",
+          "reason": "五份资料均直接讨论 Harness Engineering，对其定义（围绕模型的非模型层系统：工具、上下文、状态/记忆、护栏）、Agent=Model+Harness 的构成、与提示工程/上下文工程的关系以及术语流行背景有共同且明确的知识点，足以支持 5 道不重复的题目；用户未提出最新性要求，概念稳定，发布日期未知不影响出题。",
+          "topic": "Harness Engineering（AI 智能体运行框架工程）：定义、组成与定位",
+          "source_ids": [
+            "s1",
+            "s2",
+            "s3",
+            "s4",
+            "s5"
+          ],
+          "options": [],
+          "reviews": [
+            {
+              "source_id": "s1",
+              "primary": true,
+              "independent_origin": "Snowflake（snowflake.com 官方 AI engineering 栏目文章）"
+            },
+            {
+              "source_id": "s2",
+              "primary": true,
+              "independent_origin": "MindStudio（mindstudio.ai 官方博客）"
+            },
+            {
+              "source_id": "s3",
+              "primary": true,
+              "independent_origin": "Milvus / Zilliz（milvus.io 官方博客）"
+            },
+            {
+              "source_id": "s4",
+              "primary": true,
+              "independent_origin": "Skillify Solutions（skillifysolutions.com 博客）"
+            },
+            {
+              "source_id": "s5",
+              "primary": true,
+              "independent_origin": "Databricks（databricks.com 官方博客）"
+            }
+          ],
+          "freshness_supported": true,
+          "conflict_free": true
+        }
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "value": {
+          "title": "Harness Engineering 入门：定义、组成与定位",
+          "summary": "理解 Harness Engineering 作为模型之外运行框架工程的定义、核心组成及其在 AI 工程演进中的定位。",
+          "questions": [
+            {
+              "id": "q1",
+              "type": "single",
+              "stem": "根据资料，Harness Engineering 主要关注的是哪一层？",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "模型内部的参数与训练算法"
+                },
+                {
+                  "key": "B",
+                  "text": "围绕 AI 模型的非模型层，即智能体运行框架"
+                },
+                {
+                  "key": "C",
+                  "text": "仅用于编写提示词的技巧集合"
+                },
+                {
+                  "key": "D",
+                  "text": "数据库与向量检索的底层存储引擎"
+                }
+              ],
+              "answer": [
+                "B"
+              ],
+              "explanation": "资料指出 Harness Engineering 是设计模型之外的非模型层，这一层称为 agent harness，使模型能使用工具、遵循指令并在运行时达成目标。",
+              "knowledge_point": "Harness Engineering 的定义",
+              "difficulty": "easy"
+            },
+            {
+              "id": "q2",
+              "type": "single",
+              "stem": "资料中提到的核心公式“Agent 等于什么”是哪一项？",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "Agent = Prompt + Context"
+                },
+                {
+                  "key": "B",
+                  "text": "Agent = Model + Harness"
+                },
+                {
+                  "key": "C",
+                  "text": "Agent = Model + Dataset"
+                },
+                {
+                  "key": "D",
+                  "text": "Agent = Harness + Sandbox"
+                }
+              ],
+              "answer": [
+                "B"
+              ],
+              "explanation": "资料明确给出该领域已形成的核心公式：Agent 等于 Model 加 Harness，模型提供推理能力，harness 提供工具、记忆、校验与安全护栏。",
+              "knowledge_point": "智能体组成公式",
+              "difficulty": "easy"
+            },
+            {
+              "id": "q3",
+              "type": "single",
+              "stem": "按照资料对 AI 工程成熟阶段的描述，Harness Engineering 处于哪个位置？",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "第一阶段，早于提示工程"
+                },
+                {
+                  "key": "B",
+                  "text": "第二阶段，与上下文工程并列"
+                },
+                {
+                  "key": "C",
+                  "text": "第三阶段，继提示工程和上下文工程之后"
+                },
+                {
+                  "key": "D",
+                  "text": "与机器学习研究完全无关的独立分支，不属于 AI 工程"
+                }
+              ],
+              "answer": [
+                "C"
+              ],
+              "explanation": "资料称 Harness Engineering 是 AI 工程成熟度的第三阶段，继提示工程与上下文工程之后，更接近系统工程与 DevOps。",
+              "knowledge_point": "Harness Engineering 的定位",
+              "difficulty": "medium"
+            },
+            {
+              "id": "q4",
+              "type": "multiple",
+              "stem": "根据资料，AI 智能体运行框架（harness）通常包含哪些组成要素？",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "模型可调用的工具"
+                },
+                {
+                  "key": "B",
+                  "text": "模型接收的上下文与记忆状态"
+                },
+                {
+                  "key": "C",
+                  "text": "运行时循环与安全护栏"
+                },
+                {
+                  "key": "D",
+                  "text": "模型预训练所用的原始语料库"
+                }
+              ],
+              "answer": [
+                "A",
+                "B",
+                "C"
+              ],
+              "explanation": "资料将 harness 描述为工具、上下文、记忆状态、运行时循环与护栏等围绕模型的系统；预训练语料库属于模型训练层面，不是 harness 的组成。",
+              "knowledge_point": "Harness 的核心组成",
+              "difficulty": "medium"
+            },
+            {
+              "id": "q5",
+              "type": "judge",
+              "stem": "资料认为，提示工程和上下文工程都位于 Harness Engineering 之内，harness 是围绕模型的系统，提示与上下文是其中的组成部分。",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "正确"
+                },
+                {
+                  "key": "B",
+                  "text": "错误"
+                }
+              ],
+              "answer": [
+                "A"
+              ],
+              "explanation": "资料明确指出提示工程与上下文工程都活在 Harness Engineering 之内，harness 是模型周围的系统，提示和上下文是其中的片段。",
+              "knowledge_point": "Harness Engineering 与提示/上下文工程的关系",
+              "difficulty": "hard"
+            }
+          ],
+          "question_sources": [
+            {
+              "question_id": "q1",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q2",
+              "source_ids": [
+                "s4"
+              ]
+            },
+            {
+              "question_id": "q3",
+              "source_ids": [
+                "s4",
+                "s5"
+              ]
+            },
+            {
+              "question_id": "q4",
+              "source_ids": [
+                "s1",
+                "s4"
+              ]
+            },
+            {
+              "question_id": "q5",
+              "source_ids": [
+                "s5"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "schema": "EvidenceReview",
+        "value": {
+          "questions": [
+            {
+              "question_id": "q1",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s1",
+                  "quote": "Harness engineering, a subset of [AI engineering](https://www.snowflake.com/en/artificial-intelligence/ai-engineering/), is the discipline of designing the non-model layer around an AI model so it can use tools, follow task-specific instructions, operate within a runtime and achieve a defined outcome more reliably. This layer is called the agent harness."
+                }
+              ]
+            },
+            {
+              "question_id": "q2",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s4",
+                  "quote": "The core formula the field has settled on is simple: Agent equals Model plus Harness."
+                }
+              ]
+            },
+            {
+              "question_id": "q3",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s4",
+                  "quote": "harness engineering is best understood as the third phase of AI engineering maturity, following prompt engineering and context engineering, and it sits closer to systems engineering and DevOps than to machine learning research."
+                },
+                {
+                  "source_id": "s5",
+                  "quote": "Harness engineering is the newest stage in a broader shift in how developers work with AI systems."
+                }
+              ]
+            },
+            {
+              "question_id": "q4",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s1",
+                  "quote": "A reliable AI agent depends on the runtime around it: the tools it can call, the context it receives, the state it remembers and the guardrails it follows."
+                },
+                {
+                  "source_id": "s4",
+                  "quote": "the harness supplies the tool access, memory, verification checks, and safety guardrails"
+                },
+                {
+                  "source_id": "s5",
+                  "quote": "Harness engineering | Designing the full system around the model — tools, sandboxes, loops, guardrails"
+                }
+              ]
+            },
+            {
+              "question_id": "q5",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s5",
+                  "quote": "Prompt and context engineering both live inside harness engineering. The harness is the system around the model; prompts and context are pieces of that system."
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "value": {
+          "title": "Harness Engineering 定义、组成与定位",
+          "summary": "理解 Harness Engineering 作为模型之外运行框架工程的定义、核心组成及其在 AI 工程演进中的定位。",
+          "questions": [
+            {
+              "id": "q1",
+              "type": "single",
+              "stem": "根据资料，Harness Engineering 主要设计的是哪一层？",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "模型内部的参数与训练算法"
+                },
+                {
+                  "key": "B",
+                  "text": "围绕 AI 模型的非模型层，即智能体运行框架"
+                },
+                {
+                  "key": "C",
+                  "text": "仅用于编写提示词的技巧集合"
+                },
+                {
+                  "key": "D",
+                  "text": "数据库与向量检索的底层存储引擎"
+                }
+              ],
+              "answer": [
+                "B"
+              ],
+              "explanation": "资料指出 Harness Engineering 是设计模型之外的非模型层，这一层称为 agent harness，使模型能使用工具、遵循指令并在运行时达成目标。",
+              "knowledge_point": "Harness Engineering 的定义",
+              "difficulty": "easy"
+            },
+            {
+              "id": "q2",
+              "type": "single",
+              "stem": "资料中提到的核心公式“Agent 等于什么”是哪一项？",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "Agent = Prompt + Context"
+                },
+                {
+                  "key": "B",
+                  "text": "Agent = Model + Harness"
+                },
+                {
+                  "key": "C",
+                  "text": "Agent = Model + Dataset"
+                },
+                {
+                  "key": "D",
+                  "text": "Agent = Harness + Sandbox"
+                }
+              ],
+              "answer": [
+                "B"
+              ],
+              "explanation": "资料明确给出该领域已形成的核心公式：Agent 等于 Model 加 Harness，模型提供推理能力，harness 提供工具、记忆、校验与安全护栏。",
+              "knowledge_point": "智能体组成公式",
+              "difficulty": "easy"
+            },
+            {
+              "id": "q3",
+              "type": "single",
+              "stem": "按照资料对 AI 工程成熟阶段的描述，Harness Engineering 处于哪个位置？",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "第一阶段，早于提示工程"
+                },
+                {
+                  "key": "B",
+                  "text": "第二阶段，与上下文工程并列"
+                },
+                {
+                  "key": "C",
+                  "text": "第三阶段，继提示工程和上下文工程之后"
+                },
+                {
+                  "key": "D",
+                  "text": "与机器学习研究完全无关的独立分支，不属于 AI 工程"
+                }
+              ],
+              "answer": [
+                "C"
+              ],
+              "explanation": "资料称 Harness Engineering 是 AI 工程成熟度的第三阶段，继提示工程与上下文工程之后，更接近系统工程与 DevOps。",
+              "knowledge_point": "Harness Engineering 的定位",
+              "difficulty": "medium"
+            },
+            {
+              "id": "q4",
+              "type": "multiple",
+              "stem": "根据资料，AI 智能体运行框架（harness）通常包含哪些组成要素？",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "模型可调用的工具"
+                },
+                {
+                  "key": "B",
+                  "text": "模型接收的上下文与记忆状态"
+                },
+                {
+                  "key": "C",
+                  "text": "运行时循环与安全护栏"
+                },
+                {
+                  "key": "D",
+                  "text": "模型预训练所用的原始语料库"
+                }
+              ],
+              "answer": [
+                "A",
+                "B",
+                "C"
+              ],
+              "explanation": "资料将 harness 描述为工具、上下文、记忆状态、运行时循环与护栏等围绕模型的系统；预训练语料库属于模型训练层面，不是 harness 的组成。",
+              "knowledge_point": "Harness 的核心组成",
+              "difficulty": "medium"
+            },
+            {
+              "id": "q5",
+              "type": "judge",
+              "stem": "资料认为，提示工程和上下文工程都位于 Harness Engineering 之内，harness 是围绕模型的系统，提示与上下文是其中的组成部分。",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "正确"
+                },
+                {
+                  "key": "B",
+                  "text": "错误"
+                }
+              ],
+              "answer": [
+                "A"
+              ],
+              "explanation": "资料明确指出提示工程与上下文工程都活在 Harness Engineering 之内，harness 是模型周围的系统，提示和上下文是其中的片段。",
+              "knowledge_point": "Harness Engineering 与提示/上下文工程的关系",
+              "difficulty": "hard"
+            }
+          ],
+          "question_sources": [
+            {
+              "question_id": "q1",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q2",
+              "source_ids": [
+                "s4"
+              ]
+            },
+            {
+              "question_id": "q3",
+              "source_ids": [
+                "s4",
+                "s5"
+              ]
+            },
+            {
+              "question_id": "q4",
+              "source_ids": [
+                "s1",
+                "s4"
+              ]
+            },
+            {
+              "question_id": "q5",
+              "source_ids": [
+                "s5"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "schema": "EvidenceReview",
+        "value": {
+          "questions": [
+            {
+              "question_id": "q1",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s1",
+                  "quote": "Harness engineering, a subset of [AI engineering](https://www.snowflake.com/en/artificial-intelligence/ai-engineering/), is the discipline of designing the non-model layer around an AI model so it can use tools, follow task-specific instructions, operate within a runtime and achieve a defined outcome more reliably. This layer is called the agent harness."
+                }
+              ]
+            },
+            {
+              "question_id": "q2",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s4",
+                  "quote": "The core formula the field has settled on is simple: Agent equals Model plus Harness."
+                }
+              ]
+            },
+            {
+              "question_id": "q3",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s4",
+                  "quote": "harness engineering is best understood as the third phase of AI engineering maturity, following prompt engineering and context engineering, and it sits closer to systems engineering and DevOps than to machine learning research."
+                }
+              ]
+            },
+            {
+              "question_id": "q4",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s1",
+                  "quote": "A reliable AI agent depends on the runtime around it: the tools it can call, the context it receives, the state it remembers and the guardrails it follows."
+                },
+                {
+                  "source_id": "s4",
+                  "quote": "The model supplies raw reasoning ability, while the harness supplies the tool access, memory, verification checks, and safety guardrails"
+                }
+              ]
+            },
+            {
+              "question_id": "q5",
+              "passed": true,
+              "issue": "",
+              "evidence": [
+                {
+                  "source_id": "s5",
+                  "quote": "Prompt and context engineering both live inside harness engineering. The harness is the system around the model; prompts and context are pieces of that system."
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "response": {
+      "code": 0,
+      "message": "ok",
+      "data": {
+        "title": "Harness Engineering 定义、组成与定位",
+        "summary": "理解 Harness Engineering 作为模型之外运行框架工程的定义、核心组成及其在 AI 工程演进中的定位。",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "stem": "根据资料，Harness Engineering 主要设计的是哪一层？",
+            "options": [
+              {
+                "key": "A",
+                "text": "模型内部的参数与训练算法"
+              },
+              {
+                "key": "B",
+                "text": "围绕 AI 模型的非模型层，即智能体运行框架"
+              },
+              {
+                "key": "C",
+                "text": "仅用于编写提示词的技巧集合"
+              },
+              {
+                "key": "D",
+                "text": "数据库与向量检索的底层存储引擎"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料指出 Harness Engineering 是设计模型之外的非模型层，这一层称为 agent harness，使模型能使用工具、遵循指令并在运行时达成目标。",
+            "knowledge_point": "Harness Engineering 的定义",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q2",
+            "type": "single",
+            "stem": "资料中提到的核心公式“Agent 等于什么”是哪一项？",
+            "options": [
+              {
+                "key": "A",
+                "text": "Agent = Prompt + Context"
+              },
+              {
+                "key": "B",
+                "text": "Agent = Model + Harness"
+              },
+              {
+                "key": "C",
+                "text": "Agent = Model + Dataset"
+              },
+              {
+                "key": "D",
+                "text": "Agent = Harness + Sandbox"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料明确给出该领域已形成的核心公式：Agent 等于 Model 加 Harness，模型提供推理能力，harness 提供工具、记忆、校验与安全护栏。",
+            "knowledge_point": "智能体组成公式",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q3",
+            "type": "single",
+            "stem": "按照资料对 AI 工程成熟阶段的描述，Harness Engineering 处于哪个位置？",
+            "options": [
+              {
+                "key": "A",
+                "text": "第一阶段，早于提示工程"
+              },
+              {
+                "key": "B",
+                "text": "第二阶段，与上下文工程并列"
+              },
+              {
+                "key": "C",
+                "text": "第三阶段，继提示工程和上下文工程之后"
+              },
+              {
+                "key": "D",
+                "text": "与机器学习研究完全无关的独立分支，不属于 AI 工程"
+              }
+            ],
+            "answer": [
+              "C"
+            ],
+            "explanation": "资料称 Harness Engineering 是 AI 工程成熟度的第三阶段，继提示工程与上下文工程之后，更接近系统工程与 DevOps。",
+            "knowledge_point": "Harness Engineering 的定位",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q4",
+            "type": "multiple",
+            "stem": "根据资料，AI 智能体运行框架（harness）通常包含哪些组成要素？",
+            "options": [
+              {
+                "key": "A",
+                "text": "模型可调用的工具"
+              },
+              {
+                "key": "B",
+                "text": "模型接收的上下文与记忆状态"
+              },
+              {
+                "key": "C",
+                "text": "运行时循环与安全护栏"
+              },
+              {
+                "key": "D",
+                "text": "模型预训练所用的原始语料库"
+              }
+            ],
+            "answer": [
+              "A",
+              "B",
+              "C"
+            ],
+            "explanation": "资料将 harness 描述为工具、上下文、记忆状态、运行时循环与护栏等围绕模型的系统；预训练语料库属于模型训练层面，不是 harness 的组成。",
+            "knowledge_point": "Harness 的核心组成",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q5",
+            "type": "judge",
+            "stem": "资料认为，提示工程和上下文工程都位于 Harness Engineering 之内，harness 是围绕模型的系统，提示与上下文是其中的组成部分。",
+            "options": [
+              {
+                "key": "A",
+                "text": "正确"
+              },
+              {
+                "key": "B",
+                "text": "错误"
+              }
+            ],
+            "answer": [
+              "A"
+            ],
+            "explanation": "资料明确指出提示工程与上下文工程都活在 Harness Engineering 之内，harness 是模型周围的系统，提示和上下文是其中的片段。",
+            "knowledge_point": "Harness Engineering 与提示/上下文工程的关系",
+            "difficulty": "hard"
+          }
+        ],
+        "quiz_id": "39a74429-ddf3-43a3-8dcc-772ea43633eb",
+        "source_type": "text",
+        "user_input": "Harness Engineering",
+        "reference": {
+          "topic": "Harness Engineering（AI 智能体运行框架工程）：定义、组成与定位",
+          "retrieved_at": "2026-10-29T14:12:53.247413+00:00",
+          "sources": [
+            {
+              "id": "s1",
+              "kind": "web",
+              "title": "Harness Engineering for Reliable AI Agents | Snowflake",
+              "url": "https://www.snowflake.com/en/artificial-intelligence/ai-engineering/harness-engineering",
+              "published_at": null,
+              "excerpt": "A reliable AI agent depends on the runtime around it: the tools it can call, the context it receives, the state it remembers and the guardrails it follows. Harness engineering brings those pieces together so teams can build agents that handle multistep work safely and consistently.\n…\nHarness engineering is the process of building the systems around an AI model so it can do useful work. The model provides the intelligence, while the harness gives it the tools, context, structure and safeguards it needs to apply that intelligence effectively.\n…\nHarness engineering, a subset of [AI engineering](https://www.snowflake.com/en/artificial-intelligence/ai-engineering/), is the discipline of designing the non-model layer around an AI model so it can use tools, follow task-specific instructions, operate within a runtime and achieve a defined outcome more reliably. This layer is called the agent harness.\n…\nThis is where harness engineering intersects with context engineering. Context engineering is the discipline of choosing, structuring and delivering the right information to the model. The harness runs that strategy inside the agent loop — deciding when to retrieve context, how much to include and how to prioritize competing inputs while staying within the model’s context window."
+            },
+            {
+              "id": "s2",
+              "kind": "web",
+              "title": "Harness Engineering: Orchestrating AI Coding Agents | MindStudio",
+              "url": "https://www.mindstudio.ai/blog/what-is-harness-engineering-ai-coding",
+              "published_at": null,
+              "excerpt": "Harness engineering is the discipline of orchestrating multi-agent AI coding sessions into reliable pipelines. Here's how the practice is taking shape.\n…\n![Harness Engineering: Orchestrating AI Coding Agents](https://i.mscdn.ai/70cbb1ad-08d7-4fdc-ab31-e343780966a6/generated-images/e20f10ed-0081-4f59-95dc-85a3301f9fc0.png?fm=auto&w=1200&fit=cover?fm=auto&w=1200&fit=cover)\n…\nThat’s where **harness engineering** comes in. It’s a discipline focused on structuring and coordinating AI coding agent sessions so they produce consistent, repeatable results — not just one-off outputs. This article explains what harness engineering is, how it relates to the engineering disciplines that came before it, and why it matters for anyone building serious software with AI.\n…\nIn a manual workflow, a developer does this intuitively. Harness engineering makes it explicit and repeatable."
+            },
+            {
+              "id": "s3",
+              "kind": "web",
+              "title": "Harness Engineering: The Execution Layer AI Agents Actually Need",
+              "url": "https://milvus.io/blog/harness-engineering-ai-agents.md",
+              "published_at": null,
+              "excerpt": "[🚀 Zilliz Cloud: fully managed Milvus — 10x faster. Zero hassle. Built for AI.Try Free Now →](https://cloud.zilliz.com/signup?utm_source=milvusio&utm_medium=referral&utm_campaign=milvus_top_banner&utm_content=blog/harness-engineering-ai-agents.md)\n…\n[Star 46.3K](https://github.com/milvus-io/milvus)[Book a Demo](https://milvus.io/contact)[Try Managed Milvus](https://cloud.zilliz.com/signup?utm_source=milvusio&utm_medium=referral&utm_campaign=milvus_nav_right&utm_content=blog/harness-engineering-ai-agents.md)\n…\nMitchell Hashimoto built HashiCorp and co-created Terraform. In February 2026, he published a [blog post](https://mitchellh.com/writing/my-ai-adoption-journey) describing a habit he’d developed while working with AI agents: every time an agent made a mistake, he engineered a permanent fix into the agent’s environment. He called it “engineering the harness.” Within weeks, [OpenAI](https://openai.com/index/harness-engineering/) and [Anthropic](http\n…\ns://www.anthropic.com/engineering/harness-design-long-running-apps) published engineering articles expanding on the idea. The term _Harness Engineering_ had arrived."
+            },
+            {
+              "id": "s4",
+              "kind": "web",
+              "title": "What Is Harness Engineering? A Beginner's Guide (2026)",
+              "url": "https://skillifysolutions.com/blogs/career-growth/what-is-harness-engineering",
+              "published_at": null,
+              "excerpt": "![What Is Harness Engineering](data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201878%201056%22%20width%3D%221878%22%20height%3D%221056%22%3E%3C%2Fsvg%3E)\n…\nHarness engineering is the practice of building the surrounding software infrastructure, called a harness, that turns a raw AI model into a reliable, autonomous agent capable of completing multi-step tasks safely in production. The core formula the field has settled on is simple: Agent equals Model plus Harness. The model supplies raw reasoning ability, while the harness supplies the tool access, memory, verification checks, and safety guardrails\n…\n that make that reasoning useful and trustworthy in the real world. The term was popularized in February 2026 when Mitchell Hashimoto, co-creator of Terraform and founder of HashiCorp, published a blog post describing a habit he had developed while working with AI agents: every time an agent made a mistake, he engineered a permanent fix into the agent’s environment rather than just re-prompting it. He called this “engineering the harness,” and wi\n…\nthin weeks OpenAI and Anthropic had both published their own engineering articles expanding on the idea. If you are new to AI systems work, harness engineering is best understood as the third phase of AI engineering maturity, following prompt engineering and context engineering, and it sits closer to systems engineering and DevOps than to machine learning research."
+            },
+            {
+              "id": "s5",
+              "kind": "web",
+              "title": "What is an AI Agent Harness? | Databricks Blog",
+              "url": "https://www.databricks.com/blog/ai-harness",
+              "published_at": null,
+              "excerpt": "In this guide, we’ll cover the core components of an AI agent harness, why harnesses shape agent performance, how production agent systems are built and why harness engineering is emerging as its own discipline.\n…\nHarness engineering is the newest stage in a broader shift in how developers work with AI systems. As models have become more capable, the focus has gradually moved outward. It has shifted from writing better prompts, to controlling what information the model sees, to designing the entire system around the model.\n…\n| Harness engineering | Designing the full system around the model — tools, sandboxes, loops, guardrails | The harness itself | Agentic systems and autonomous workflows |\n…\nPrompt and context engineering both live inside harness engineering. The harness is the system around the model; prompts and context are pieces of that system."
+            }
+          ],
+          "question_sources": [
+            {
+              "question_id": "q1",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q2",
+              "source_ids": [
+                "s4"
+              ]
+            },
+            {
+              "question_id": "q3",
+              "source_ids": [
+                "s4",
+                "s5"
+              ]
+            },
+            {
+              "question_id": "q4",
+              "source_ids": [
+                "s1",
+                "s4"
+              ]
+            },
+            {
+              "question_id": "q5",
+              "source_ids": [
+                "s5"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "saved_reference_equal": true
+  }
+]

@@ -4,7 +4,10 @@ pydantic>=2,<3
 pydantic-settings>=2,<3
 langchain-core
 langchain-deepseek
+langchain
+langchain-tavily
 httpx
+certifi
 aiomysql>=0.3,<0.4
 PyJWT>=2.10,<3
 PyMySQL[rsa]>=1.1,<2

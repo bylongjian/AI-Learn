@@ -1,0 +1,9 @@
+{
+  "status": 422,
+  "seconds": 0.031,
+  "response": {
+    "code": 42203,
+    "message": "请提供不含账号密码的公开 HTTP(S) 网页链接，或粘贴学习正文",
+    "data": null
+  }
+}

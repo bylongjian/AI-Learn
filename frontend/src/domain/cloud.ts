@@ -37,7 +37,10 @@ export function cloudDetailToSession(value: unknown, local?: Session): Session {
   let session = { ...createSession(quiz), created_at: value.created_at, updated_at: value.created_at }
   if (value.report === null) {
     if (value.answer_records.length) throw invalid()
-    return local?.quiz.quiz_id === quiz.quiz_id ? local : session
+    if (local?.quiz.quiz_id === quiz.quiz_id) {
+      return quiz.reference && !local.quiz.reference ? { ...local, quiz } : local
+    }
+    return session
   }
   if (value.report.quiz_id !== undefined && value.report.quiz_id !== quiz.quiz_id) throw invalid()
   if (value.answer_records.length !== quiz.questions.length) throw invalid()

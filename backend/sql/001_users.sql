@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS quiz_sessions (
     summary TEXT NOT NULL,
     user_input TEXT NOT NULL,
     questions JSON NOT NULL,
+    `reference` JSON NULL,
     created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     UNIQUE KEY quiz_owner (quiz_id, user_id),
     KEY user_created (user_id, created_at, id),

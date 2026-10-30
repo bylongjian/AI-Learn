@@ -3,6 +3,7 @@ import { useDidHide, useRouter } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import AppShell from '../../components/AppShell'
 import ScoreRing from '../../components/ScoreRing'
+import QuestionReferences from '../../components/QuestionReferences'
 import { Btn, Empty, Failure, goRoot, Loading, newTopic } from '../../components/common'
 import { getAnswerRecord, getStats } from '../../domain/learning'
 import { authStore } from '../../services/client'
@@ -63,7 +64,7 @@ export default function ReportPage() {
       {review && <View className='review-list'>{session.quiz.questions.map((q, i) => {
         const record = getAnswerRecord(session, q.id)!
         const labels = (keys: string[]) => keys.length ? keys.map(key => `${key} ${q.options.find(o => o.key === key)?.text || ''}`).join('；') : '未作答'
-        return <View className='review-item' key={q.id}><View className='review-title'>{i + 1}. {q.stem}</View><View className={`review-copy ${record.is_correct ? 'review-correct' : 'review-wrong'}`}>我的答案：{labels(record.selected_answers)}</View><View className='review-copy'>正确答案：{labels(q.answer)}</View><View className='review-copy'>{q.explanation}</View></View>
+        return <View className='review-item' key={q.id}><View className='review-title'>{i + 1}. {q.stem}</View><View className={`review-copy ${record.is_correct ? 'review-correct' : 'review-wrong'}`}>我的答案：{labels(record.selected_answers)}</View><View className='review-copy'>正确答案：{labels(q.answer)}</View><View className='review-copy'>{q.explanation}</View><QuestionReferences quiz={session.quiz} questionId={q.id} /></View>
       })}</View>}
       <View className='report-more'><Btn className='report-more-toggle' onClick={() => setMore(!more)}>{more ? '▾' : '▸'} 学习建议与已掌握知识点</Btn>{more && <><View className='section-title'>下一步怎么学</View>{report.advice.map((line, i) => <View className='advice-copy' key={i}>{line}</View>)}<View className='section-title'>本轮答对的知识点</View>{report.mastered_points.length ? <View className='point-tags'>{report.mastered_points.map(point => <Text className='point-tag' key={point}>{point}</Text>)}</View> : <View className='advice-copy'>先从上面的讲解开始，一次理解一个知识点。</View>}</>}</View>
     </>}

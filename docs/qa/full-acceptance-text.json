@@ -1,0 +1,252 @@
+[
+  {
+    "path": "full_text",
+    "status": 200,
+    "seconds": 7.718,
+    "knowledge_seconds": 2.672,
+    "model_calls": 4,
+    "tool_calls": [],
+    "structured_calls": [
+      {
+        "schema": "InputAssessment",
+        "seconds": 1.25
+      },
+      {
+        "schema": "KnowledgeDecision",
+        "seconds": 1.422
+      },
+      {
+        "schema": "GroundedQuizContent",
+        "seconds": 3.594
+      },
+      {
+        "schema": "EvidenceReview",
+        "seconds": 1.422
+      }
+    ],
+    "decisions": [
+      {
+        "status": "ready",
+        "reason": "用户提供了充分正文，领域明确为水的物理性质、化学组成和物态变化；文本含足够不重复知识点可支持5题，关键事实无矛盾。用户未要求最新，概念稳定，允许发布日期未知。",
+        "topic": "标准大气压下水的性质、组成与物态变化",
+        "source_ids": [
+          "s1"
+        ],
+        "options": [],
+        "reviews": [
+          {
+            "source_id": "s1",
+            "primary": true,
+            "independent_origin": "用户直接提供的学习文本，无外部出版信息"
+          }
+        ],
+        "freshness_supported": true,
+        "conflict_free": true
+      }
+    ],
+    "response": {
+      "code": 0,
+      "message": "ok",
+      "data": {
+        "title": "标准大气压下水的性质、组成与物态变化",
+        "summary": "学习标准大气压下水的沸点凝固点、H2O组成以及熔化凝固蒸发凝结等物态变化，并理解物态变化不改变水的化学组成。",
+        "questions": [
+          {
+            "id": "q1",
+            "type": "single",
+            "stem": "在标准大气压下，纯水的沸点是多少摄氏度？",
+            "options": [
+              {
+                "key": "A",
+                "text": "0摄氏度"
+              },
+              {
+                "key": "B",
+                "text": "50摄氏度"
+              },
+              {
+                "key": "C",
+                "text": "100摄氏度"
+              },
+              {
+                "key": "D",
+                "text": "212摄氏度"
+              }
+            ],
+            "answer": [
+              "C"
+            ],
+            "explanation": "资料明确指出，标准大气压下纯水在100摄氏度沸腾。",
+            "knowledge_point": "标准大气压下纯水的沸点",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q2",
+            "type": "single",
+            "stem": "根据资料，每个水分子含有几个氢原子和几个氧原子？",
+            "options": [
+              {
+                "key": "A",
+                "text": "一个氢原子和一个氧原子"
+              },
+              {
+                "key": "B",
+                "text": "两个氢原子和一个氧原子"
+              },
+              {
+                "key": "C",
+                "text": "两个氢原子和两个氧原子"
+              },
+              {
+                "key": "D",
+                "text": "一个氢原子和两个氧原子"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料说明每个水分子有两个氢原子和一个氧原子，化学式为H2O。",
+            "knowledge_point": "水分子的原子组成",
+            "difficulty": "easy"
+          },
+          {
+            "id": "q3",
+            "type": "single",
+            "stem": "下列哪种变化是把液态水变成水蒸气？",
+            "options": [
+              {
+                "key": "A",
+                "text": "熔化"
+              },
+              {
+                "key": "B",
+                "text": "凝固"
+              },
+              {
+                "key": "C",
+                "text": "蒸发"
+              },
+              {
+                "key": "D",
+                "text": "凝结"
+              }
+            ],
+            "answer": [
+              "C"
+            ],
+            "explanation": "资料指出蒸发使液态水变为水蒸气；熔化是冰变水，凝固是水变冰，凝结是水蒸气变水。",
+            "knowledge_point": "蒸发与凝结的区别",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q4",
+            "type": "multiple",
+            "stem": "根据资料，下列哪些说法正确？",
+            "options": [
+              {
+                "key": "A",
+                "text": "冰是固态水"
+              },
+              {
+                "key": "B",
+                "text": "液态水会流动"
+              },
+              {
+                "key": "C",
+                "text": "水蒸气是气态水"
+              },
+              {
+                "key": "D",
+                "text": "水的物态变化会改变其化学组成"
+              }
+            ],
+            "answer": [
+              "A",
+              "B",
+              "C"
+            ],
+            "explanation": "资料说明冰是固态水、液态水流动、水蒸气是气态水，并明确物态变化不改变水的化学组成，因此D错误。",
+            "knowledge_point": "水的三态与物态变化的本质",
+            "difficulty": "medium"
+          },
+          {
+            "id": "q5",
+            "type": "judge",
+            "stem": "水的物态变化会改变水的化学组成。",
+            "options": [
+              {
+                "key": "A",
+                "text": "正确"
+              },
+              {
+                "key": "B",
+                "text": "错误"
+              }
+            ],
+            "answer": [
+              "B"
+            ],
+            "explanation": "资料明确指出这些物态变化不改变水的化学组成，所以该说法错误。",
+            "knowledge_point": "物态变化不改变化学组成",
+            "difficulty": "hard"
+          }
+        ],
+        "quiz_id": "e1790b97-ca93-4545-b8cd-be24d13ec312",
+        "source_type": "text",
+        "user_input": "At standard atmospheric pressure, pure water freezes at 0 degrees Celsius and boils at 100 degrees Celsius. Water consists of hydrogen and oxygen, and its chemical formula is H2O. Each water molecule has two hydrogen atoms and one oxygen atom. Ice is solid water, liquid water flows, and water vapor is gaseous water. Melting changes solid ice to liquid water. Freezing changes liquid water to ice. Evaporation changes liquid water to vapor. Condensation changes vapor to liquid water. These changes of state do not change the chemical composition of water. Please make questions only about this text.",
+        "reference": {
+          "topic": "标准大气压下水的性质、组成与物态变化",
+          "retrieved_at": "2026-10-29T13:54:56.731967+00:00",
+          "sources": [
+            {
+              "id": "s1",
+              "kind": "user_text",
+              "title": "用户提供的资料",
+              "url": null,
+              "published_at": null,
+              "excerpt": "At standard atmospheric pressure, pure water freezes at 0 degrees Celsius and boils at 100 degrees Celsius. Water consists of hydrogen and oxygen, and its chemical formula is H2O. Each water molecule has two hydrogen atoms and one oxygen atom. Ice is solid water, liquid water flows, and water vapor is gaseous water. Melting changes solid ice to liquid water. Freezing changes liquid water to ice. Evaporation changes liquid water to vapor. Condensation changes vapor to liquid water. These changes of state do not change the chemical composition of water. Please make questions only about this text."
+            }
+          ],
+          "question_sources": [
+            {
+              "question_id": "q1",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q2",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q3",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q4",
+              "source_ids": [
+                "s1"
+              ]
+            },
+            {
+              "question_id": "q5",
+              "source_ids": [
+                "s1"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "saved_reference_equal": true,
+    "report": {
+      "status": 200,
+      "seconds": 2.235,
+      "accuracy": 100
+    }
+  }
+]
