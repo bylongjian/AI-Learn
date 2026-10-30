@@ -6,7 +6,7 @@ import pytest
 from app.core.errors import AppError
 from app.models.quiz import Quiz
 from app.storage import initialize_schema
-from tests.test_user_repository import repository, stored_quiz
+from tests.test_user_repository import stored_quiz
 
 
 async def create_document(repository, user_id, **changes):

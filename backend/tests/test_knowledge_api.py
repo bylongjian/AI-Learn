@@ -3,8 +3,6 @@ import asyncio
 import httpx
 import pytest
 
-from tests.test_documents import documents
-from tests.test_user_repository import repository
 from tests.test_user_api import client_for,login,bearer
 
 

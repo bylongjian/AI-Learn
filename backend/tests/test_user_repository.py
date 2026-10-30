@@ -1,6 +1,5 @@
 """Integration tests deliberately use the separately configured real MySQL database."""
 import asyncio
-import importlib.util
 from uuid import uuid4
 
 import pytest
@@ -10,24 +9,6 @@ from app.models.quiz import Quiz
 from app.models.report import Report, ReportRequest
 from app.services.scoring import score_answers
 from tests.factories import quiz_content, report_request, report_text
-
-
-@pytest.fixture
-async def repository():
-    if importlib.util.find_spec("app.storage") is None:
-        yield None
-        return
-    from app.storage import Database, UserRepository, initialize_schema
-    config = Settings(_env_file=".env.test", app_env="test", dev_login_enabled=False)
-    assert config.app_env == "test" and config.mysql_database.endswith("_test"), "Never run repository tests on the app database"
-    database = Database(config)
-    await initialize_schema(database)
-    async with database.connection() as conn:
-        async with conn.cursor() as cursor:
-            for table in ("reports", "answer_records", "quiz_sessions", "kb_documents", "users"):
-                await cursor.execute(f"DELETE FROM {table}")
-    yield UserRepository(database)
-    await database.close()
 
 
 def stored_quiz(quiz_id=None, title="Python", count=3):
@@ -76,7 +57,6 @@ def result_for(quiz):
 
 
 async def test_mysql_initializer_is_repeatable_and_pool_is_lazy(repository):
-    assert repository is not None, "MySQL storage is missing"
     from app.storage import Database, initialize_schema
     database = Database(Settings(_env_file=".env.test"))
     assert database._pool is None
@@ -87,7 +67,6 @@ async def test_mysql_initializer_is_repeatable_and_pool_is_lazy(repository):
 
 
 async def test_concurrent_same_openid_upsert_has_one_identity(repository):
-    assert repository is not None, "MySQL storage is missing"
     users = await asyncio.gather(*(repository.upsert_user("wx-test-same") for _ in range(12)))
     assert len({u["id"] for u in users}) == 1
     assert users[0]["average_accuracy"] is None
@@ -96,7 +75,6 @@ async def test_concurrent_same_openid_upsert_has_one_identity(repository):
 
 
 async def test_profiles_persist_unicode_and_parameterized_text(repository):
-    assert repository is not None, "MySQL storage is missing"
     user = await repository.upsert_user("dev:a")
     profile = await repository.update_profile(user["id"], "小明'; DROP TABLE users; --", "https://example.org/avatar.png")
     assert profile["nickname"] == "小明'; DROP TABLE users; --"
@@ -105,7 +83,6 @@ async def test_profiles_persist_unicode_and_parameterized_text(repository):
 
 
 async def test_full_quiz_roundtrip_long_title_and_ownership(repository):
-    assert repository is not None, "MySQL storage is missing"
     a = await repository.upsert_user("wx-a")
     b = await repository.upsert_user("wx-b")
     quiz = stored_quiz(title="题" * 4000)
@@ -121,7 +98,6 @@ async def test_full_quiz_roundtrip_long_title_and_ownership(repository):
 
 
 async def test_result_transaction_and_concurrent_replay_award_xp_once(repository):
-    assert repository is not None, "MySQL storage is missing"
     user = await repository.upsert_user("wx-results")
     quiz = stored_quiz()
     await repository.save_quiz(user["id"], quiz)
@@ -145,7 +121,6 @@ async def test_result_transaction_and_concurrent_replay_award_xp_once(repository
 
 
 async def test_result_rolls_back_answers_and_xp_if_report_insert_fails(repository):
-    assert repository is not None, "MySQL storage is missing"
     user = await repository.upsert_user("wx-rollback")
     quiz = stored_quiz()
     await repository.save_quiz(user["id"], quiz)
@@ -169,7 +144,6 @@ async def test_result_rolls_back_answers_and_xp_if_report_insert_fails(repositor
 
 
 async def test_paginated_search_status_and_weighted_statistics(repository):
-    assert repository is not None, "MySQL storage is missing"
     user = await repository.upsert_user("wx-history")
     other = await repository.upsert_user("wx-other")
     quizzes = [stored_quiz(title="Python基础"), stored_quiz(title="Python进阶", count=5), stored_quiz(title="SQL")]
@@ -197,7 +171,6 @@ async def test_paginated_search_status_and_weighted_statistics(repository):
 
 
 async def test_unconfigured_database_is_safe_and_never_connects():
-    assert importlib.util.find_spec("app.storage") is not None, "MySQL storage is missing"
     from app.storage import Database
     from app.core.errors import AppError
     database = Database(Settings(_env_file=None))

@@ -1,9 +1,0 @@
-{
-  "status": 504,
-  "seconds": 14.985,
-  "response": {
-    "code": 50401,
-    "message": "学习资料获取超时，请重试或补充学习正文",
-    "data": null
-  }
-}

@@ -2,254 +2,142 @@
 
 > 把好奇，变成一小关。
 >
-> 输入想学的主题，让 AI 把知识变成题目，在答题、讲解和复盘中完成一轮学习。
+> 输入学习主题，让 AI 把知识变成题目，在答题、讲解和复盘中完成一轮学习。
 
 ## 一、项目介绍
 
-学习咩是一款基于 **Taro + React + Python FastAPI + LangChain + DeepSeek** 开发的 AI 闯关学习微信小程序，同时支持 H5 预览。
+学习咩是参考鱼皮 [yu-ai-learn](https://github.com/liyupi/yu-ai-learn) 的 AI 学习项目，使用 **Taro + React + FastAPI + LangChain + DeepSeek**，支持微信小程序和 H5。本仓库保留自己的页面设计、代码实现与学习记录，功能以当前源码为准。
 
-输入一句学习目标，或粘贴一段学习材料，AI 会生成一组闯关题目。每题提交后立即展示正确答案和完整讲解，完成后生成学习报告，帮助你回顾答对了什么、还需要巩固什么。
-
-当前包含 **输入、答题、报告、题库、“我的”和私有知识库**，并已接入用户系统。登录后生成的题库、完整作答和报告保存在 MySQL，可从同一账号的其他客户端读取；游客记录和未完成进度保留在当前设备。
-
-知识库支持 PDF、DOCX、Markdown、TXT，每人 10 篇、每篇 10MB。文档就绪后可指定主题出题：先检索自己的资料，再联网补充，仍不足时生成明确标注“未依据文档或联网资料核实”的模型练习。原文件解析后删除，已有题库、报告及引用摘录保留。首次使用需配置百炼并升级数据库，操作与当前验证范围见 [知识库手工验收指南](docs/知识库RAG验收记录.md)；真实云端联合调用及用户授权的代理体验验收已通过。
+输入主题、粘贴正文或提供公开网页链接，系统获取资料并生成一组关卡；每题提交后给出正确答案和讲解，完成后生成复盘报告。登录后可以保存云端记录，也可以从“我的知识库”上传自己的学习资料。
 
 <table>
+  <tr><th>输入学习主题</th><th>闯关答题</th><th>学习报告</th></tr>
   <tr>
-    <th>输入学习主题</th>
-    <th>闯关答题</th>
-    <th>学习报告</th>
-  </tr>
-  <tr>
-    <td><img src="docs/verification/weapp-guest-home.png" width="250" alt="学习咩主题输入页" /></td>
-    <td><img src="docs/verification/weapp-quiz.png" width="250" alt="真实 AI 生成的闯关题目" /></td>
-    <td><img src="docs/verification/weapp-report.png" width="250" alt="正确率80%、40XP的学习报告" /></td>
+    <td><img src="docs/验收记录/verification/weapp-guest-home.png" width="250" alt="学习主题输入页" /></td>
+    <td><img src="docs/验收记录/verification/weapp-quiz.png" width="250" alt="闯关答题页" /></td>
+    <td><img src="docs/验收记录/verification/weapp-report.png" width="250" alt="学习报告页" /></td>
   </tr>
 </table>
 
-*以上为微信开发者工具游客模拟器中的实际运行截图。*
+以上是历史微信开发者工具模拟器实测截图，详细条件见[验收记录](docs/验收记录/README.md)。
 
 ### 为什么做这个项目？
 
-学习一个新主题时，读懂内容只是开始。能否回答问题、解释概念，并发现自己理解中的空白，才更容易判断这一轮学习有没有收获。
+读过一段知识，不一定能把它讲清楚。学习咩把“读资料”变成“做一组小练习”：通过题目主动思考，通过讲解查漏补缺，再用报告回顾这一轮的收获。默认五题，适合概念入门、短文本自测与碎片时间复习。
 
-学习咩把这个过程拆成一组小关卡：先确定学习主题，再通过题目主动思考，最后结合讲解和报告复盘。每轮默认五题，适合概念入门、短文本自测和碎片时间复习。
+为什么做成微信小程序，而不是 App 或者网页？因为学习这件事发生在碎片时间里，微信小程序免安装、随时随地能打开、依托微信生态的流量入口、还便于分享给朋友一起卷，对一个学习类产品来说几乎是最优形态。
 
-### 6 项核心能力
+更重要的是，这个项目的骨架可以直接复用到任何垂直领域，换个知识源就是一个新产品，比如驾考宝典、面试题库、企业内部培训考核、职业资格考试复习、儿童英语单词闯关等等。
 
-1. **输入主题，生成学习关卡。**
+### 七项核心能力
 
-   支持一句话或一段文本，最多 2000 字。AI 根据输入生成题目、选项、答案、讲解和对应知识点，前端默认每轮五题。
-
-2. **三种题型，提交后立即反馈。**
-
-   支持单选、多选、判断。选择后点击“提交答案”，立即高亮正确答案并展开知识讲解。多选需要完整命中答案集合；答对获得 10 XP，答错获得 0 XP。
-
-3. **AI 生成学习复盘报告。**
-
-   展示本轮正确率、答对题数、XP、三句话知识总结、待巩固知识点和学习建议，还可以回看本轮题目与作答。统计由后端重新计算，AI 负责生成总结和建议。
-
-4. **中途退出，保留学习进度。**
-
-   已生成的关卡、提交的答案和当前位置保存在本机。退出后可从题库继续，已经答过的题目不会重复结算 XP。
-
-5. **题库搜索与状态筛选。**
-
-   在题库中查找已生成的关卡，按学习状态筛选，继续未完成的练习，或打开已完成关卡的报告。
-
-6. **查看个人学习统计。**
-
-   首页显示账号昵称、XP 和最近报告；“我的”支持修改昵称，展示累计 XP、完成关卡数、累计答对题数、平均正确率和分页历史。题库支持云端搜索和状态筛选，不同账号的数据独立保存。
-
-<table>
-  <tr>
-    <th>题库与进度恢复</th>
-    <th>我的学习</th>
-  </tr>
-  <tr>
-    <td><img src="docs/verification/weapp-library-resume.png" width="250" alt="保存答题进度的本机题库" /></td>
-    <td><img src="docs/verification/weapp-profile.png" width="250" alt="累计经验、完成关卡和正确率统计" /></td>
-  </tr>
-</table>
-
-## 二、项目特点
-
-- **完整的学习闭环。** 从主题输入到出题、答题、讲解、报告，再到历史回看，主要路径均可实际操作。
-- **跨端实现。** 使用 Taro 维护小程序和 H5，页面布局、配色与交互依据仓库中的 UI 原型实现。
-- **结构化 AI 输出。** 通过 LangChain 调用 DeepSeek，结合严格 JSON 解析、Pydantic 和业务规则校验题目与报告，并对异常结果进行有界重试。
-- **学习过程可恢复。** 输入和答题记录保存在本机；出题失败可重新生成，报告失败保留成绩，支持重试。
-- **核心回归与平台验收。** 自动化检查覆盖学习闭环、身份认证与云端存储，并保留真实 AI 与小程序模拟器验收结果。
-
-## 三、技术选型与项目结构
-
-### 技术选型
-
-| 层面 | 技术选型 |
+| 能力 | 当前效果 |
 | --- | --- |
-| 小程序 / H5 前端 | Taro 4.3.1 · React 18 · TypeScript · CSS · Webpack5 |
-| 后端服务 | Python 3.11 · FastAPI · Uvicorn · asyncio |
-| 数据校验 | Pydantic v2 · pydantic-settings |
-| AI 编排与模型 | LangChain · langchain-deepseek / ChatDeepSeek · DeepSeek |
-| 用户与学习记录 | MySQL 8 · aiomysql · PyJWT · Taro 本地缓存 |
-| 私有文档检索 | Chroma · 百炼 text-embedding-v4 · pypdf · docx2txt |
-| 后端测试 | pytest · pytest-asyncio · pytest-cov · httpx |
-| 前端与平台检查 | Node.js test runner · tsx · TypeScript · 微信原生 WXSS 编译器 |
+| 主题、正文和网页出题 | 最多输入 2000 字符；先获取资料，主题有歧义时先选领域，资料不足时提示补充 |
+| 三种题型与即时讲解 | 单选、多选、判断；提交后展示答案、讲解和知识点，多选完整匹配才算正确 |
+| 学习报告 | 正确率、答对题数、XP、三句总结、薄弱点、建议与题目回看；每答对一题获得 10 XP |
+| 退出后继续 | 本机保存题目、答案和位置，已答题目不会重复结算 |
+| 题库与个人统计 | 搜索、状态筛选、历史报告、昵称、累计 XP 与正确率统计 |
+| 登录与云端记录 | 微信登录；同账号读取题库与最终报告，游客和不同账号的缓存互相隔离 |
+| 私有文档知识库 | PDF、DOCX、Markdown、TXT；每人最多 10 篇、每篇 10MB；先检索文档，再联网补充，仍不足时明确提示模型兜底 |
 
-默认模型为 `deepseek-flash`，可通过后端环境变量调整。后端负责出题、重新判分、生成报告和账号数据保存；前端负责交互、身份状态、账号缓存与本机进度。
+文档出题的模型兜底不等于资料核实通过；普通首页出题资料不足仍会暂停。未完成作答只保留在本机，游客记录不自动迁入账号。视频解析、AI 配图、分享海报、排行榜和支付尚未实现。
 
-### 项目结构
+## 二、技术选型与目录
+
+前后端分开运行，后端负责资料获取、出题、计分和保存，前端负责交互、账号缓存与本机进度。当前仓库没有 Docker 部署文件，也不会在 API 启动时自动建库建表。
+
+| 层面 | 本仓使用的技术 |
+| --- | --- |
+| 前端 | Taro 4.3.1 · React 18 · TypeScript · Webpack 5 |
+| 后端 | Python 3.11 · FastAPI · Pydantic v2 · Uvicorn |
+| AI 与检索 | LangChain · langchain-deepseek · DeepSeek · Tavily；检索使用 LangChain create_agent |
+| 知识库 | 百炼 text-embedding-v4 · 本地 Chroma · pypdf · docx2txt |
+| 账号与数据 | 微信 code2session · JWT · MySQL 8 · aiomysql |
+| 验证 | pytest · Node.js test runner · tsx · TypeScript · 微信构建检查 |
 
 ```text
 AI-Learn/
-├── frontend/                 # Taro 小程序与 H5 工程
-│   ├── src/                  # 五个页面、组件、业务逻辑与本地存储
-│   ├── tests/                # 核心学习回归与微信构建检查
-│   └── project.config.json   # 微信开发者工具项目配置
-├── backend/                  # Python 后端
-│   ├── app/                  # 核心 API、身份、模型调用与计分服务
-│   ├── tests/                # 核心 API、身份与真实 MySQL 回归
-│   └── sql/                  # MySQL 建表与索引
-├── prototype/                # UI 交互原型
-└── docs/                     # 当前需求、设计与验收记录
+├── backend/          # API、AI 服务、数据访问、SQL 与 pytest
+├── frontend/         # 六个页面、组件、业务状态与双端构建
+├── prototype/        # 使用模拟数据的 HTML 交互原型
+├── docs/             # 当前需求、架构、运行与维护指南
+│   └── 验收记录/     # 可公开的验收摘要与展示截图
+├── openspec/         # 已同步规范、进行中变更与归档
+└── .github/          # 项目已有的 OpenSpec 技能与提示词
 ```
 
-## 四、快速运行
+目录职责和修改入口见[项目维护指南](docs/项目维护指南.md)。`dist/`、虚拟环境、数据库和临时调试产物不纳入源码。
 
-> 更详细的配置和接口说明见 [前端运行指南](frontend/README.md) 与 [后端运行指南](backend/README.md)。以下命令以 Windows PowerShell 为例，从项目根目录开始操作。
+## 三、快速运行
 
-### 前置条件
-
-- Python 3.11。
-- Node.js 和 npm；本项目已验证 Node.js 24.19.0、npm 11.17.0。
-- 微信开发者工具，用于运行小程序模拟器。
-- DeepSeek API Key，用于真实出题和报告生成。
-- MySQL 8，用于账号和云端记录；游客功能可独立运行。
+以下命令在 Windows PowerShell 执行。需要 Python 3.11、Node.js/npm；账号与知识库另需 MySQL 8。完整配置、数据库初始化、微信导入和排错见[保姆级本地运行指南](docs/保姆级本地运行指南.md)。
 
 ### 1. 启动后端
 
-在第一个终端执行：
+从项目根目录进入后端，安装依赖并创建本机配置。已有 `.env` 时保留，修改配置后重启服务。
 
 ```powershell
 cd backend
-
-# 创建虚拟环境；已有环境时直接使用
 if (-not (Test-Path .venv/Scripts/python.exe)) { python -m venv .venv }
-
-# 安装锁定依赖
 ./.venv/Scripts/python.exe -m pip install -r requirements.txt
-
-# 首次复制配置，保留已经填写的 .env
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-编辑 `backend/.env`，填写自己的 `DEEPSEEK_API_KEY`。密钥只保存在后端配置中。
-
-```dotenv
-DEEPSEEK_API_KEY=your_deepseek_api_key
-DEEPSEEK_MODEL=deepseek-flash
-```
-
-然后在同一终端启动服务：
+编辑 `.env`，填写 `DEEPSEEK_API_KEY`；普通主题和网页出题还需要 `TAVILY_API_KEY`。不配置 Tavily 时，可以使用充分的学习正文，但不会自动改用模型知识出题。知识库需要另配百炼，账号需要配置 MySQL 与 JWT。
 
 ```powershell
 ./.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-启动后访问 [API 文档](http://127.0.0.1:8000/docs)，可查看并调试接口。修改后端 `.env` 后需要重启服务。
+打开 [API 文档](http://127.0.0.1:8000/docs)；[健康检查](http://127.0.0.1:8000/api/v1/health) 在未配 Key 时也应返回 `data.status="ok"`。
 
-账号功能还需在 `backend/.env` 配置 `MYSQL_HOST/PORT/USER/PASSWORD/DATABASE` 与随机 `JWT_SECRET`。先创建应用数据库及专用账号，再执行 `./.venv/Scripts/python.exe -m scripts.init_db` 初始化表；本机现有环境已经配置并初始化。独立测试库的配置保存在 `.env.test`，数据库名必须以 `_test` 结尾。具体字段、权限及初始化说明见 [后端运行指南](backend/README.md)。环境文件均不纳入版本库。
+### 2. 启动前端
 
-本地体验账号功能时，后端设置 `APP_ENV=development`、`DEV_LOGIN_ENABLED=true`，前端 `.env` 设置 `TARO_APP_DEV_LOGIN=true` 并使用回环 API 地址。重新构建后，在“我的”选择明确标注的“测试账号 A/B”。本机已启用此模式。真实微信登录需要在后端配置 `WECHAT_APP_ID/WECHAT_APP_SECRET`，并在 `frontend/project.config.json` 填写自己的 AppID；当前尚无真实凭据，官方登录与真机验收待完成。
-
-### 2. 启动小程序前端
-
-新开一个终端，从项目根目录执行：
+新开终端，从项目根目录执行以下命令，打开 [H5 预览](http://127.0.0.1:10086)。前端配置仅包含 API 地址与开发登录开关，密钥放在后端。
 
 ```powershell
 cd frontend
-npm.cmd ci --registry=https://registry.npmjs.org
-npm.cmd run dev:weapp
-```
-
-保持这个终端运行，源码修改后会重新编译。用微信开发者工具导入 **`frontend` 目录**，工具会读取 `project.config.json`，小程序构建目录为 `frontend/dist/weapp`。
-
-#### 游客模式
-
-保留配置中的 `touristappid`，即可进行本地游客模拟器调试。本机已验证的官方 CLI 启动方式如下，在 `frontend/` 目录执行：
-
-```powershell
-& 'D:/微信web开发者工具/cli.bat' auto --project (Get-Location).Path --auto-port 9420 --lang zh
-```
-
-CLI 路径按实际安装位置调整，并在工具的「设置 → 安全设置」中开启「服务端口」。本机版本的普通 `open` 命令拒绝游客 AppID，`auto` 入口已完成实测。
-
-前端默认请求 `http://127.0.0.1:8000`。需要调整地址时，在前端 `.env` 中配置 `TARO_APP_API_BASE_URL`，再重新构建。真机调试需使用手机可访问的后端地址和自己的 AppID；正式环境还需配置 HTTPS 与微信合法域名。
-
-### 3. 可选：H5 预览
-
-在另一个终端进入 `frontend/`，执行：
-
-```powershell
+npm.cmd ci
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 npm.cmd run dev:h5
 ```
 
-打开 [H5 本地预览](http://127.0.0.1:10086)。如果端口已被运行中的预览服务占用，先停止对应服务再启动。
+需要微信小程序时，改为运行 `npm.cmd run dev:weapp`，用微信开发者工具导入 **frontend 目录**。项目配置指向 `dist/weapp`；本地 HTTP 调试在开发者工具中关闭合法域名校验。默认 `touristappid` 用于本地游客模拟器；真机与真实微信登录需要自己的 AppID 和可访问的后端地址。
 
-### 4. 生成构建产物
+## 四、测试与验证
 
-在 `frontend/` 执行：
-
-```powershell
-npm.cmd run build:weapp
-npm.cmd run build:h5
-```
-
-产物分别位于 `frontend/dist/weapp` 和 `frontend/dist/h5`。
-
-## 五、测试与验证
-
-### 运行自动化检查
-
-在 `backend/` 执行：
+自动化测试替换外部模型、检索和微信响应，不消耗 AI 额度。后端完整回归需要专用 `_test` 数据库，不能指向应用库；具体准备和完整检查命令见[维护指南](docs/项目维护指南.md)。
 
 ```powershell
+# 在 backend/ 执行
 ./.venv/Scripts/python.exe -m pytest -q --tb=short
 ./.venv/Scripts/python.exe -m pip check
 ```
 
-在 `frontend/` 执行：
-
 ```powershell
+# 在 frontend/ 执行
 npm.cmd test
 npm.cmd run typecheck
+npm.cmd run build:h5
+npm.cmd run build:weapp
+node tests/weapp-startup-smoke.cjs
 ```
 
-上述核心测试替换外部模型与微信 HTTPS 边界，不消耗 AI 接口额度；MySQL 仓储使用独立测试库。小程序生产构建后还需运行 `node tests/weapp-startup-smoke.cjs` 与原生 WXSS smoke，命令见 [前端运行指南](frontend/README.md)。
+构建成功仍需微信原生样式编译和模拟器检查。自动化结果、历史真实 AI 联调、用户体验和真机验收分别记录，不互相替代；真实微信凭据与真机仍待验证。
 
-核心回归集保留游客学习闭环、AI生成与确定性计分、JWT/微信登录、MySQL幂等结算、账号隔离、云端历史和微信生产构建启动检查。完整历史可从Git提交1cd3d44查看。
+## 五、项目文档
 
-### 已完成的验证
+文档模仿参考项目先讲问题、再讲方案和操作的方式，内容按本仓实现更新。希望系统学习时，可依次阅读需求、总方案、专题设计和验收记录。
 
-| 检查项 | 已记录结果 |
+| 文档 | 解决什么问题 |
 | --- | --- |
-| 后端自动化测试 | 213 项通过，包含真实 MySQL 与本地 Chroma 回归 |
-| 前端自动化测试 | 76 项通过，类型检查通过 |
-| 构建与原生编译 | H5、小程序构建及微信原生 WXSS 编译通过 |
-| 小程序启动回归 | 真实生产产物的 App/Page 注册、RAF 调度和取消检查通过 |
-| 真实 AI 验收 | 原有 10 组题库、10 份报告通过；新增账号真实 HTTP + AI + MySQL 闭环通过 |
-| 微信模拟器 | 新用户系统云端报告恢复与统计通过；游客真实出题、五题作答、退出续答及报告回看通过，运行时异常 0 |
+| [文档导航](docs/README.md) | 快速找到运行、开发与验收入口 |
+| [需求分析](docs/需求分析文档.md) | 当前功能、用户流程、限制与后续方向 |
+| [方案设计](docs/方案设计文档.md) | 实际架构、数据流和模块职责 |
+| [本地运行指南](docs/保姆级本地运行指南.md) | 从环境配置到首次运行 |
+| [项目维护指南](docs/项目维护指南.md) | 目录规则、代码自检、测试与本次整理记录 |
+| [上线前仓库检查](docs/上线前仓库检查.md) | 提交范围、本地资料存放和正式发布前待办 |
+| [历史验收](docs/验收记录/README.md) | 已发生的验证与证据 |
 
-账号真实联调中，五题答对四题，报告显示 **80% 正确率、40 XP**；重复请求返回同一报告且不重复增加经验，其他账号读取返回 404。H5 与官方微信模拟器已完成复验，详细步骤和截图见 [用户系统验收记录](docs/用户系统验收记录.md)。真机与真实微信登录尚未验收。
-
-## 六、项目文档与后续规划
-
-| 文档 | 内容 |
-| --- | --- |
-| [需求分析](docs/需求分析文档.md) | 产品目标与需求背景 |
-| [方案设计](docs/方案设计文档.md) | 原始技术方案与业务链路 |
-| [用户系统需求](docs/用户系统需求分析文档.md) | 登录、资料与云端学习记录的需求 |
-| [用户系统设计](docs/用户系统方案设计文档.md) | 身份、MySQL 存储与账号隔离方案 |
-| [用户系统验收记录](docs/用户系统验收记录.md) | 功能结果、本机体验与剩余限制 |
-| [知识库 RAG 验收记录](docs/知识库RAG验收记录.md) | 本次测试、正常操作、未配 Key 与降级体验步骤 |
-
-用户系统已完成本次确认范围的前后端实现。未完成的逐题进度仍限本机，旧游客记录不自动归入账号。联网检索、来源引用和 PDF/Word 知识库已接入并通过代理体验验收，等待用户确认后归档；后续可扩展错题复习与深度统计。
+知识库已完成实现、阶段验收、主规范同步与 OpenSpec 归档，历史和参考资料的区别见 [OpenSpec 导航](openspec/README.md)。后续可扩展错题复习和更细的学习统计；正式上线仍需完成生产环境与真机验收。

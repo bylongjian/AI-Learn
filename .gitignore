@@ -20,6 +20,8 @@ build/
 coverage/
 prototype/.qa/
 *.log
+*.log.*
+logs/
 *.zip
 
 # Machine-specific files.
@@ -33,4 +35,26 @@ Desktop.ini
 htmlcov/
 backend/data/
 .playwright-cli/
+.playwright/
 output/playwright/
+
+# Local-only evidence, scratch work, exports and private tool settings.
+.local/
+.scratch/
+.vscode/
+.playwright-mcp/
+.swc/
+project.private.config.json
+wxcloudrun*.env.json
+*.har
+*.dump
+*.sql.gz
+*.sql.bak
+*.sqlite
+*.sqlite3
+*.db
+*.pem
+*.key
+*.p12
+*.pfx
+.coverage.*

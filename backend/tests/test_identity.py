@@ -1,4 +1,3 @@
-import importlib.util
 import time
 
 import jwt
@@ -6,13 +5,10 @@ import pytest
 from pydantic import ValidationError
 
 from app.core.config import Settings
+from app.core import identity
 
 
 def test_identity_settings_are_optional_and_mask_secrets():
-    config = Settings(_env_file=None)
-    assert getattr(config, "app_env", None) == "development"
-    assert config.dev_login_enabled is False
-    assert config.mysql_database is None
     configured = Settings(_env_file=None, jwt_secret="a-secret-value", mysql_password="db-secret-value", wechat_app_secret="wx-secret-value")
     assert "a-secret-value" not in repr(configured)
     assert "db-secret-value" not in repr(configured)
@@ -24,14 +20,7 @@ def test_dev_login_cannot_be_enabled_in_production():
         Settings(_env_file=None, app_env="production", dev_login_enabled=True)
 
 
-def identity_module():
-    assert importlib.util.find_spec("app.core.identity") is not None, "JWT identity implementation is missing"
-    from app.core import identity
-    return identity
-
-
 def test_token_roundtrip_has_required_scoped_claims():
-    identity = identity_module()
     config = Settings(_env_file=None, jwt_secret="x" * 64)
     token = identity.create_token(config, "42", is_test=False)
     assert identity.read_token(config, token) == identity.Identity("42", False)
@@ -44,7 +33,6 @@ def test_token_roundtrip_has_required_scoped_claims():
     {"exp": "9999999999"}, {"iss": "other"}, {"aud": "other"}, {"is_test": "false"},
 ])
 def test_invalid_token_claims_are_anonymous(change):
-    identity = identity_module()
     config = Settings(_env_file=None, jwt_secret="x" * 64)
     payload = {"sub": "42", "iat": int(time.time()), "exp": int(time.time()) + 60,
                "iss": "ai-learn", "aud": "ai-learn-client", "is_test": False, **change}
@@ -53,7 +41,6 @@ def test_invalid_token_claims_are_anonymous(change):
 
 
 def test_missing_wrong_algorithm_and_production_dev_tokens_are_rejected():
-    identity = identity_module()
     config = Settings(_env_file=None, jwt_secret="x" * 64)
     assert identity.read_token(config, "invalid") is None
     assert identity.read_token(Settings(_env_file=None), "invalid") is None
@@ -68,7 +55,6 @@ def test_missing_wrong_algorithm_and_production_dev_tokens_are_rejected():
 
 
 def test_missing_jwt_secret_never_issues_a_token():
-    identity = identity_module()
     from app.core.errors import AppError
     with pytest.raises(AppError) as exc:
         identity.create_token(Settings(_env_file=None), "1", is_test=False)

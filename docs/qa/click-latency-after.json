@@ -1,7 +1,0 @@
-{
-  "phase": "after",
-  "cached_report_sample": true,
-  "measurements": [],
-  "exceptions": [],
-  "report_opening_feedback_boundary": "mocked native loading success and failure; real page navigation"
-}

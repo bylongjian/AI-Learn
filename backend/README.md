@@ -1,210 +1,115 @@
 # 学习咩后端
 
-Python 3.11、FastAPI、Pydantic v2、LangChain `ChatPromptTemplate` 与 `langchain-deepseek.ChatDeepSeek`。
-默认模型 `deepseek-flash`，通过 `DEEPSEEK_MODEL` 配置。使用 JSON mode、Pydantic 校验，并显式传递
-`extra_body={"thinking":{"type":"disabled"}}`。实际模型输出为空、截断或不符合 schema 时会重试；不伪造 AI 结果。
-接收后以完整原始文本严格解析 JSON 并重新执行 Pydantic 校验，不接受 LangChain 自动修复的缺括号、Markdown 围栏或尾随内容；拒绝 NaN、Infinity 和数值溢出。
-上游 HTTP 200 但 completion 缺少或没有 choices 时也按畸形结果重试；重试时追加简短的严格 JSON/schema 纠正要求。单条生成链最多 45 秒；出题还受下文的 25 秒阶段预算和 55 秒请求预算约束。认证失败不重试。
+后端使用 Python 3.11、FastAPI、Pydantic v2 和 LangChain，负责资料获取、DeepSeek 出题、计分、报告、登录和知识库。第一次配置请先看[本地运行指南](../docs/保姆级本地运行指南.md)，模块关系见[方案设计](../docs/方案设计文档.md)。
 
-## 本地运行
+## 一、开发与配置
 
-以下命令在 `backend` 目录的 PowerShell 中执行。若系统 `python` 不是 3.11，请改成自己的 Python 3.11 可执行文件路径。
+所有命令在 `backend/` 执行。依赖直接声明在 `requirements.in`，已验证版本锁定在 `requirements.txt`；本次整理不升级依赖。
 
 ```powershell
-python -m venv .venv
+if (-not (Test-Path .venv/Scripts/python.exe)) { python -m venv .venv }
 ./.venv/Scripts/python.exe -m pip install -r requirements.txt
-Copy-Item .env.example .env
-# 编辑 .env 填入自己的 DEEPSEEK_API_KEY 和 TAVILY_API_KEY
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ./.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-H5 前端使用 Taro Webpack5，运行地址为 `http://localhost:10086`，通过 `Taro.request` 直连后端 `http://127.0.0.1:8000`。
-配置从进程环境和当前工作目录的 `.env` 读取，修改后重启。缺少 Key 时健康检查仍正常，生成接口返回配置提示。
-应用正常或异常退出 lifespan 时关闭自己创建的 SDK 客户端；调用方注入的 provider 及借用的 HTTP 客户端由调用方管理。
+配置读取进程环境和当前目录 `.env`，修改后重启。缺少 Key 时健康检查可用，对应功能返回配置提示。密钥不写进源码，接口不回显上游原始错误。
 
-`requirements.in` 描述直接依赖，`requirements.txt` 固定本次 Python 3.11 验证环境全部依赖，包含测试工具。
-
-## 接口
-
-### 出题参考资料配置
-
-出题前先获取资料，再判断领域和资料是否充分。Tavily 负责关键词搜索和公开网页读取；密钥只保存在后端。
-
-在 `backend/.env` 中填写 `TAVILY_API_KEY=你的密钥`，然后重启后端。其他配置可沿用默认值：
-
-| 配置 | 默认值 | 用途 |
-| --- | --- | --- |
-| `ENABLE_WEB_SEARCH` | `true` | 启用外部资料获取 |
-| `KNOWLEDGE_TIMEOUT_SECONDS` | `25` | 资料获取和领域判断总预算 |
-| `QUIZ_BUILD_TIMEOUT_SECONDS` | `25` | 出题、依据检查与修正共享预算 |
-| `QUIZ_REQUEST_TIMEOUT_SECONDS` | `55` | 包含保存的出题请求总预算 |
-| `KNOWLEDGE_MAX_TOOL_CALLS` | `4` | 每次准备最多四次外部工具调用 |
-| `KNOWLEDGE_MAX_CONTEXT_CHARS` | `12000` | 交给模型的资料与元数据大小上限 |
-
-两个阶段的预算之和必须小于请求总预算；总预算最多 55 秒，前端等待 60 秒。
-关闭搜索或缺少密钥时，系统不会自动退回模型知识出题。用户仍可粘贴充分的学习正文，作为明确标记的用户资料；这不代表已经核实最新信息。
-搜索失败、网页不可读或资料不足时，保留输入并提示重试、补充领域、正文或公开参考链接，不伪造已阅读的资料。
-
-代理启用 Fake-IP 时，无需修改系统代理：后端只在本机解析命中 `198.18.0.0/15` 时，通过固定的 DNSPod HTTPS DNS 接口核对真实 A/AAAA 地址，最多等待 3 秒。同一请求复用同域名结果，不缓存到后续请求；同批来源并行核验。真实私网、合成 IP 字面量及核验故障仍不能提取。只提交域名，不向 DNS 服务发送正文或模型密钥。接口依据：[DNSPod 官方文档](https://cloud.tencent.com/document/product/302/110786)。
-
-纯网页链接读取正文后选择相关片段，不从路径猜测检索词；用户附带学习重点时才按重点提取，最多返回五段供后端筛选。题目依据仍逐字核验，复查引用尽量使用短的连续原文，避免模型改动引号或空格造成误拒。
-
-成功响应为 `{"code":0,"message":"ok","data":...}`；普通错误 `data` 为 `null`。需要选择领域时，HTTP 409 / `40902` 的 `data.options` 返回 2～4 个简短选项。错误不回显密钥或上游错误正文。
-交互文档位于 `/docs`。
-
-| 接口 | 输入 / 返回 |
+| 配置组 | 作用 |
 | --- | --- |
-| `GET /api/v1/health` | 无 Key 可用；返回 `data.status="ok"` |
-| `POST /api/v1/quiz/generate` | `user_input` 1–2000 字符；`question_count` 3–5；`difficulty` 为 mixed/easy/medium/hard；可选 `topic_context` 为 1–200 字符的领域描述 |
-| `POST /api/v1/report/generate` | `quiz_id`、`topic`、完整 `questions`、每题恰好一条 `answer_records` |
+| `DEEPSEEK_API_KEY/BASE_URL/MODEL` | 模型连接；默认模型 `deepseek-flash` |
+| `TAVILY_API_KEY`、`ENABLE_WEB_SEARCH` | 普通主题与网页资料获取 |
+| `MYSQL_*`、`JWT_SECRET` | 账号、云端练习和知识库元数据 |
+| `WECHAT_APP_ID/SECRET` | 真实微信 code2session 登录 |
+| `APP_ENV`、`DEV_LOGIN_ENABLED` | 开发登录只能在 development 环境启用 |
+| `DASHSCOPE_*`、`KB_*` | 百炼向量化、文件数量大小及处理预算 |
+| `CHROMA_PERSIST_DIR`、`KB_UPLOAD_DIR` | 持久化与临时目录；相对路径以 backend 为基准 |
+| `CORS_ORIGINS`、`RATE_LIMIT_*`、`MAX_BODY_BYTES` | H5 来源、进程内频率和请求大小限制 |
 
-Quiz 返回 `quiz_id/source_type/user_input/title/summary/questions/reference`。新题库的 `reference` 保存主题、资料准备时间、来源及逐题关联；历史题库允许缺省或为 `null`。
-每题字段为 `id/type/stem/options/answer/explanation/knowledge_point/difficulty`；
-选项为 `{key,text}`，答案为大写字母数组。题型比例为 `question_count-2` 道单选、1 道多选、1 道判断。
-单选/多选严格 A–D 四选项，判断严格 A/B 两选项（A 正确、B 错误）。
+全部字段和默认值见 [.env.example](.env.example)，跨字段约束见 `app/core/config.py`。API 不自动建库建表；账号首次使用或升级后运行 `./.venv/Scripts/python.exe -m scripts.init_db`。初始化会处理全部 SQL、旧表字段与索引，不清空已有记录。
 
-答题记录字段为 `question_id/selected_answers/is_correct/duration_ms`；允许空选择，`duration_ms` 非负且有限。
-服务端忽略客户端 `is_correct`，按选择与答案集合完全一致判分，不给多选部分分。
-Report 返回 `quiz_id/accuracy/correct/total/xp/mastered_points/weak_points/three_line_summary/advice/share_quote`。
-`accuracy` 为整数、四舍五入（半数向上），`xp=correct*10`。同一知识点任何一题答错即归入 weak，且不同时归入 mastered。
-AI 只生成三条总结、1–5 条建议和一句鼓励，不能修改统计或知识点集合。
+## 二、接口一览
 
-| HTTP | code | 含义 |
-| --- | --- | --- |
-| 422 | 42201 / 42202 | 请求校验失败 / 命中内容规则 |
-| 422 | 42203 | 资料不足或参考网页无法读取，请补充资料 |
-| 409 | 40902 | 主题有多个含义，需要用户选择领域 |
-| 413 / 429 | 41301 / 42901 | 请求体过大 / IP 频率限制 |
-| 503 | 50301 / 50302 | Key 或上游配置不可用 / 重试耗尽 |
-| 503 | 50304 | 联网资料获取不可用、调用上限或搜索故障 |
-| 504 | 50401 | 生成总超时 |
-| 404 / 405 / 500 | 40400 / 40500 / 50001 | 路由 / 方法 / 未预期异常 |
+交互文档位于 [localhost:8000/docs](http://127.0.0.1:8000/docs)。正常业务响应为 `{code:0,message:"ok",data:...}`；普通错误的 `data` 为 null，领域确认是带选项的特殊错误响应。
 
-### 领域确认与出题顺序
-
-1. 后端判断输入是主题、实际正文还是公开 URL，再获取对应资料。
-2. 检索后仍有多个含义时，返回 `data.options`，每项包含 `label` 和 `description`，不生成题库。
-3. 用户选择后，用原始 `user_input` 加上所选领域的 `topic_context` 重新提交。选择只限定检索方向，不跳过资料检查。
-4. 领域明确、资料充分后生成题目，先检查结构、题型数量和难度，再检查每道题的事实、答案、讲解和原文依据。
-5. 依据检查失败时最多修正一次，修正后仍需复查。全部通过后才允许保存和返回。
-
-资料、网页和领域描述都作为输入数据，不执行其中的指令。来源 ID、审核覆盖范围及引用片段需要程序校验，不能仅相信模型自报“已核实”。
-
-搜索无结果与服务故障分开处理：前者允许 Agent 在原预算内调整关键词或非用户指定的过滤条件，后者仍暂停。同一网页后来取得正文时会更新已有来源并保留 ID；即使已有五个来源，资料不足时仍可改进这些来源，不继续增加数量。
-
-### 来源展示与保存
-
-每道题讲解下可以展开参考来源。网页来源显示标题、原文片段、链接和已知发布日期；没有发布日期时明确说明，不使用检索时间代替。充分正文标记为“用户提供的资料 · 未独立联网核实”。
-
-| `reference` 字段 | 内容 |
+| 方法与路径 | 输入和结果 |
 | --- | --- |
-| `topic` / `retrieved_at` | 已确认主题 / 带时区的资料准备时间 |
-| `sources` | 最多五项，每项包含 `id/kind/title/url/published_at/excerpt`；正文没有 URL 和发布日期 |
-| `question_sources` | 每题一项 `{question_id,source_ids}`，必须覆盖全部题目且只引用实际来源 |
+| `GET /api/v1/health` | 返回 `data.status="ok"`，不检测外部服务是否全部可用 |
+| `POST /api/v1/quiz/generate` | `user_input` 1～2000 字符，`question_count` 3～5，`difficulty` mixed/easy/medium/hard；可选 `topic_context`、`doc_id` |
+| `POST /api/v1/report/generate` | `quiz_id/topic/questions/answer_records`；登录用户以本人已存原题判分 |
+| `POST /api/v1/user/login` | 微信一次性 code 换取用户资料和 JWT |
+| `POST /api/v1/user/dev-login` | 显式开发账号；仅启用开发模式且直接连接地址为本机时可用 |
+| `GET/PUT /api/v1/user/profile` | 获取资料与统计、修改昵称和头像 URL；需要登录 |
+| `GET /api/v1/user/quizzes` | 本人题库分页、标题关键词与状态筛选 |
+| `GET /api/v1/user/quizzes/{quiz_id}` | 本人完整题库、最终作答、报告和引用快照 |
+| `POST /api/v1/knowledge/documents` | multipart 单文件字段 `file`，可选 `file_name` 保留微信原名；返回 202 与 processing |
+| `GET /api/v1/knowledge/documents` | 本人文档列表、数量和单文件上限 |
+| `GET /api/v1/knowledge/documents/{doc_id}` | 状态、片段数与可展示的失败提示 |
+| `DELETE /api/v1/knowledge/documents/{doc_id}` | 返回 202 与 deleting；清理完成后查询为 404 |
 
-游客随本机题库保存来源；登录后随完整题库保存到 MySQL，详情接口返回同一份资料。历史列表只返回摘要，避免携带大段片段。旧题库仍可答题和查看报告，页面提示“本次记录未保存参考来源”。
+知识库接口全部要求有效 Bearer 身份；匿名学习接口可作为游客使用。登录题库保存后返回 `X-Learning-User`，前端据此确认云端归属。
 
-若公开网页被拒绝，请先检查 URL 是否公开可读，再查看后端是否提示公开地址核验失败。Fake-IP 已由项目内 HTTPS DNS 核验兼容，无需调整系统代理；核验服务不可达时可稍后重试或粘贴正文，系统不会放宽私网地址限制。
+### 题库、来源与报告
 
-## 验证
+接口数据必须能在本机和云端往返恢复，因此来源与生成方式随完整题库保存，历史列表只返回摘要。旧题库没有这些可选字段时仍可读。
+
+| 数据 | 主要字段和规则 |
+| --- | --- |
+| Quiz | `quiz_id/source_type/user_input/title/summary/questions/reference/generation` |
+| Question | `id/type/stem/options/answer/explanation/knowledge_point/difficulty`；单选和多选 A～D，判断 A/B |
+| Reference | `topic/retrieved_at/sources/question_sources`；每题关联真实来源，不虚构发布日期 |
+| Source | `id/kind/title/url/published_at/excerpt`；文档额外有 doc_id、chunk_id 和可用 page |
+| Answer record | `question_id/selected_answers/is_correct/duration_ms`；后端忽略客户端正确标记并重新判分 |
+| Report | `quiz_id/accuracy/correct/total/xp/mastered_points/weak_points/three_line_summary/advice/share_quote` |
+
+三种题型比例为 `question_count-2` 道单选、一多选、一判断。多选按完整答案集合计分；正确率半数向上取整，`xp=correct*10`。同一知识点任意一题错误即列入待巩固。AI 只生成总结、建议与鼓励语，不能改统计。
+
+### 常用错误
+
+前端按 HTTP 状态和 code 展示下一步操作，不依赖原始异常文本。错误信息不含密钥、文件内部路径或上游响应正文。
+
+| HTTP / code | 含义 |
+| --- | --- |
+| 401 / `40101` | 需要有效登录 |
+| 404 / `40401` | 文档或练习不存在、或不属于当前用户 |
+| 409 / `40902` | 需选择领域，`data.options` 提供 2～4 个选项 |
+| 409 / `40903`、`40904` | 文档未就绪、文档数量已满 |
+| 422 / `42201`、`42202`、`42203` | 输入格式、内容规则、资料不足或网页不可读 |
+| 413 / `41301`；429 / `42901` | 请求或文件过大、频率限制 |
+| 503 / `50301`～`50304` | 配置、生成重试耗尽、云端存储或联网资料服务不可用 |
+| 504 / `50401` | 生成超过总预算 |
+
+## 三、出题和外部调用边界
+
+普通出题先获取资料并确认领域，生成后检查结构和逐题依据，未通过时最多修正一次。关闭搜索或没有 Key 时，只能用充分正文作为明确标记的用户资料，不自动用模型知识冒充已核实资料。
+
+资料准备默认 25 秒，生成与依据检查 25 秒，含保存总请求最多 55 秒，前端等待 60 秒。外部工具最多四次，资料总量最多 12000 字符。单条模型链最多 45 秒，并受所处阶段剩余时间约束；认证失败不重试。
+
+模型使用 JSON mode，完整原始 JSON 重新经过 Pydantic 和业务校验；缺括号、Markdown 围栏、额外尾随内容及非有限数值不会被自动修复后接受。SDK 客户端由创建它的一方释放，应用 lifespan 负责关闭应用自有资源。
+
+公开 URL 保留私网检查。代理 Fake-IP 命中 `198.18.0.0/15` 时，使用固定 DNSPod HTTPS DNS 核验真实地址，最多 3 秒，只提交域名；私网、合成 IP 字面量和核验失败仍拒绝读取。无需通过修改系统代理或关闭保护来绕过。
+
+## 四、私有文档与运行数据
+
+知识库的上传、处理和删除都有明确状态，202 只表示已接受。默认每人 10 篇、每篇 10MB；失败或未清理完的记录仍占名额。支持 PDF/DOCX/MD/TXT，扫描件无 OCR，文本使用 UTF-8。
+
+文档解析由可终止子进程执行，含排队最长 180 秒；原文件解析后删除。默认按 1000 字符分块、重叠 150，向量存本地 Chroma；相对目录以 backend 为准。文档与充分性判断先用最多 8 秒，仍共享整次资料准备的 25 秒预算。
+
+文档出题按“文档 → 联网 → 带警示的模型兜底”执行。`generation.mode` 为 document、document_web、web_fallback 或 model_fallback；兜底时 `reference=null` 并保存未核实提示与原因。身份、归属、文档状态、内容、依据审核、格式和保存失败都不能触发模型兜底。
+
+只运行一个 API worker，不能让多个进程同时写本地 Chroma。备份时停写并同时备份 MySQL 和 Chroma；更换向量模型、维度或地域地址后删除旧文档重传。删除文档保留既有题库、报告和引用快照。
+
+## 五、测试与限制
+
+完整回归需要真实独立 MySQL；测试外部响应均为替代数据，不调用付费接口。配置与不依赖数据库的检查命令见[项目维护指南](../docs/项目维护指南.md)。
 
 ```powershell
 ./.venv/Scripts/python.exe -m pytest -q --tb=short
 ./.venv/Scripts/python.exe -m pip check
 ```
 
-当前核心回归为 213 项通过，覆盖资料获取、领域确认、逐题依据检查、来源保存、私有文档处理与 RAG 降级、确定性计分、账号隔离及 MySQL 幂等结算。自动化测试替换外部模型、检索和微信 HTTPS 边界，不调用付费接口；MySQL 仓储使用真实独立测试库，配置与安全规则见下文。历史真实 API 验收见 [AI 出题优化验收记录](../docs/AI出题优化验收记录.md)，本次知识库验证范围及手工步骤见 [知识库 RAG 验收记录](../docs/知识库RAG验收记录.md)。
+共享数据库和文档 fixture 位于 `tests/conftest.py`。`.env.test` 的数据库名必须以 `_test` 结尾，fixture 只清理该独立库；测试账号需要建表、读写与 ALTER 权限。测试不能并发共享同一个数据库。
 
-## 用户、登录和云端练习
+限流保存在单个 API 进程内，默认每 IP 每 60 秒 20 次；登录另有独立限额。请求体默认 64KiB，文件上传使用 11MiB multipart 上限，文件本身仍为 10MiB。仅使用直接连接 IP，不信任任意转发头；内容词表也不等于完整语义审核。
 
-用户存储使用 MySQL 8、InnoDB 和 `utf8mb4`。连接池首次访问用户数据时才连接，关闭应用时释放。未配置数据库或数据库不可用均不阻止健康检查和游客 AI 功能启动；有效身份的云端存储失败返回安全的 503，不返回保存成功。
-
-在 `backend/.env` 设置 `MYSQL_HOST/PORT/USER/PASSWORD/DATABASE` 和私有随机 `JWT_SECRET`。`JWT_EXPIRE_SECONDS` 默认 604800 秒；JWT 固定使用 HS256，并验证签名、签发者、受众、过期时间和身份类型。`JWT_SECRET` 没有默认值。微信登录另需 `WECHAT_APP_ID`、`WECHAT_APP_SECRET`，由服务器调用 `code2Session`；整个换码过程最多 5 秒，失败后不自动重用 code。
-
-先由 MySQL 管理员创建数据库并授予该数据库的专用账号权限，再从 `backend` 初始化表：
-
-```powershell
-./.venv/Scripts/python.exe -m scripts.init_db
-# 指定其他环境文件：
-./.venv/Scripts/python.exe -m scripts.init_db --env-file .env.test
-```
-
-初始化 SQL 位于 `sql/001_users.sql`。旧版本升级也执行上述命令：初始化流程查询列是否存在，再按 `sql/002_quiz_reference.sql` 增加可空 `reference JSON` 列，重复执行不会重复加列。命令还会补齐统计所需的用户索引，不创建数据库或数据库账号。密码从环境文件读取，不作为命令参数传递。表包括用户、完整原始练习、每个练习的一份作答结果和一份报告；外键同时约束练习归属。
-
-回滚时配套回退前后端代码，保留新增的可空列和已有数据，不执行删列或清空题库。旧行的来源为 `null`；旧版代码仍按原字段查询。回滚会恢复旧版出题行为，不能继续声称具备本次资料检查能力。
-
-`APP_ENV` 可为 `development/test/production`，默认 `development`。`DEV_LOGIN_ENABLED` 默认 `false`；仅在明确启用且环境为 `development` 时注册开发登录，还要求直连客户端为回环地址。开发账号 a/b 对应不同稳定身份，资料的 `is_test=true`，不依赖微信授权。生产环境禁止启用开发登录并拒绝开发身份 JWT。开发登录不应通过反向代理暴露给外部用户。
-
-以下路径均位于 `/api/v1`，使用现有 `code/message/data` 信封。用户接口要求 `Authorization: Bearer <token>`；缺失或过期返回 401。
-
-| 接口 | 输入 / `data` |
-| --- | --- |
-| `POST /user/login` | `{code}` → `{token,expires_in,user:Profile}` |
-| `POST /user/dev-login` | `{account:"a"或"b"}` → 同上；禁用时 404 |
-| `GET /user/profile` | `Profile` |
-| `PUT /user/profile` | `{nickname,avatar_url}` → 更新后的 `Profile` |
-| `GET /user/quizzes` | `page=1&page_size=10&search=&status=all或pending或completed` → `{items,total,page,page_size,totals}` |
-| `GET /user/quizzes/{quiz_id}` | `{quiz:原始完整Quiz,answer_records,report:Report或null,created_at}`；其他用户的练习 404 |
-
-`Profile` 包含 `id`（字符串）、`nickname`、`avatar_url`、`total_xp`、`quiz_count`、`correct_count`、`average_accuracy`、`is_test`。统计只计入完成并保存的结果；没有完成题目时平均正确率为 `null`，否则按全部完成题目加权，并沿用半数向上取整。昵称去除首尾空白后为 1–100 字符且拒绝控制字符；头像为空或不含用户密码的 HTTPS URL，最多 500 字符，没有上传功能。
-
-练习列表按创建时间、内部 ID 倒序，`page_size` 为 1–50，搜索按标题字面子串匹配。`items` 包含 `quiz_id/title/question_count/correct_count/accuracy/status/created_at`；未完成时 `correct_count/accuracy` 为 `null`，`status` 为 `not-started`，完成后为 `completed`。`totals` 的 `all/pending/completed` 基于当前搜索条件。时间使用 UTC ISO 8601。
-
-原有出题和报告路径继续支持游客；缺失或无效凭证按游客处理且完全不访问用户数据库。有效身份出题在返回前保存完整原始题目。报告验证归属和完整原题，不信任客户端的题目修改或 `is_correct`。答题结果、报告和 `correct*10` XP 同事务保存；失败全部回滚。已保存的同答案重试直接返回原报告，不再请求模型，冲突答案返回 409。模型调用期间不持有数据库锁。进程间并发依靠行锁和唯一约束，确保 XP 只增加一次；同进程同时提交还会合并模型调用。
-
-仅在成功完成身份对应的云端保存后，出题与报告响应附带 `X-Learning-User: <用户ID>`。CORS 公开该响应头并允许 `Authorization` 和 `PUT`；客户端可验证请求确实按该身份处理，避免令牌过期时把游客结果误当成云端保存。游客响应不含该头。登录接口另有每 IP 每分钟 30 次的进程内限额，不占 AI 限额；请求体大小限制同时覆盖 POST 和 PUT。
-
-## 用户系统测试环境
-
-用户仓储和端到端 API 测试要求真实 MySQL，不使用 SQLite 或替代仓储。新建独立测试数据库（名称必须以 `_test` 结尾）与专用账号，将配置放在被 Git 忽略的 `.env.test`；不能复制应用数据库名称。建议 `APP_ENV=test`、`DEV_LOGIN_ENABLED=false`，测试会在专用测试应用内显式启用开发身份。测试数据清理仅针对该独立数据库。
-
-测试账号需有独立测试数据库的建表、读写与 ALTER 权限；回滚测试通过临时 CHECK 约束使真实报告写入失败，并在 `finally` 中移除，不修改 MySQL 全局设置。测试依旧只替换外部模型或微信 HTTPS 边界，不访问付费模型。
-
-## MVP 范围与限制
-
-包含账号、资料和标题搜索，以及登录后的练习和最终结果云端保存；不提供中途进度同步、游客历史自动导入、头像上传或对外分享接口。游客评分仍基于回传题目，登录评分只使用该用户已保存的原题。
-IP 限流仅在本进程内保存，默认最多 1024 个客户端、每 IP 每 60 秒 20 次，拒绝新客户端时也不增长内存。
-使用直接连接 IP，不信任任意 `X-Forwarded-For`。本地启动采用单 worker；多 worker/多实例不共享限流状态。
-请求体上限默认 64 KiB，包括分块请求。内容规则是可配置词表，覆盖输入与生成结果，不等同于完整语义内容审核。
-生产环境如需多实例共享限流、追踪或日志平台，应在后续范围中设计。
-
-参考：[DeepSeek JSON mode](https://api-docs.deepseek.com/guides/json_mode/)、[LangChain DeepSeek](https://docs.langchain.com/oss/python/integrations/chat/deepseek)。
-
-## 私有知识库：数据库与运行准备
-
-文档记录保存在 MySQL，检索片段与向量保存在本地 Chroma。部署时使用一个 API worker，不能让多个进程同时写同一个 Chroma 目录；独立的文件解析进程不连接 Chroma。
-
-先安装锁定依赖，再配置 `.env.example` 中的 `DASHSCOPE_API_KEY` 和 `DASHSCOPE_BASE_URL`，地址从百炼控制台复制，必须与 Key 的地域和业务空间匹配。默认模型 `text-embedding-v4`、1024 维；示例文件不含可用密钥或虚构业务空间。未配置向量化时不能上传新文档，普通学习仍按原规则运行。
-
-从 `backend` 运行 `./.venv/Scripts/python.exe -m scripts.init_db`，初始化命令会创建 `sql/003_knowledge_base.sql` 的文档表，并为旧题库增加可空 `generation` 字段，重复执行不会清空题库。API 启动不自动建表。独立测试库仍必须以 `_test` 结尾。
-
-`CHROMA_PERSIST_DIR` 默认 `backend/data/chroma`，`KB_UPLOAD_DIR` 默认 `backend/data/uploads`；相对路径始终以 backend 为基准。这些目录已排除 Git，不能作为公开静态目录提供。备份前停止业务写入，同时备份 MySQL 与 Chroma 目录；不能只恢复其中一份。改变 Embedding 模型、维度或地域地址后，旧文档需要删除重传，不能用新向量查询旧索引。
-
-知识库支持 PDF、DOCX、Markdown 和 TXT，文本请保存为 UTF-8（允许 BOM）。PDF 必须能复制文字且无需密码，图片扫描件不做 OCR；DOCX 只读取文字，不保证复杂表格布局。每段最多 1000 字符、重叠 150 字符；PDF 保留实际页码，其他格式不编造页码。文字解析由可终止的子进程完成，原文件解析后即删除，中间片段文件在向量化结束或失败时清理。
-
-### 文档接口与处理状态
-
-以下接口全部要求有效 Bearer 登录；上传与开始处理分开，HTTP 202 只表示已接受，不表示解析完成。默认每人最多 10 篇、每篇 10MB，失败和未彻底删除的记录仍占名额；上传复用现有 IP 频率保护，没有每日次数额度。
-
-| 接口 | 操作与结果 |
-| --- | --- |
-| `POST /api/v1/knowledge/documents` | multipart 的单文件字段 `file`，可选 `file_name`（最多 255 字符，用于微信原文件名），返回文档项和 `processing` |
-| `GET /api/v1/knowledge/documents` | 返回 `items/limit/max_file_bytes`，只列本人文档 |
-| `GET /api/v1/knowledge/documents/{doc_id}` | 返回状态、片段数和安全的失败提示 |
-| `DELETE /api/v1/knowledge/documents/{doc_id}` | 返回 202 和 `deleting`；清理完成后查询为 404 |
-
-状态为 `processing/ready/failed/deleting/delete_failed`，只有 `ready` 可以开始闯关。文件处理含排队最多 180 秒；后端重启后中断任务标成失败，不自动重新消耗向量化额度。删除先禁止检索，清理不全则显示 `delete_failed`，可再次 DELETE 重试；已生成的题库、报告和引用快照保留。恢复任务每 30 秒重试待清理内容。
-
-上传路径单独使用 11MiB multipart 流式请求限制，文件实际大小仍为 10MiB；原有 JSON 请求保持 64KiB。`40101` 表示需登录，`40401` 表示文档不存在或不属于自己，`41301` 表示超大，`40903` 表示文档未就绪，`40904` 表示文档名额已满；配置及存储故障返回安全的 503。接口不会返回内部路径、密钥或外部服务原始错误。
-
-### 从文档出题与模型兜底
-
-在原有 `POST /api/v1/quiz/generate` 请求中增加 `doc_id` 即可使用自己的就绪文档；`user_input` 仍填写具体学习主题，题量和难度规则沿用现有接口。先检查登录、文档归属和状态，再检索文档，不恢复旧归档的异步出题 API。
-
-顺序是文档检索→联网补充→模型兜底。文档和充分性判断最多先用 8 秒，全部资料准备共用 25 秒；生成与依据审核另用 25 秒，含保存的请求仍最多 55 秒。检索工具总计最多四次；公开搜索参数由服务基于学习主题固定，文档原文不进入 Tavily 查询。
-
-有资料依据的题目继续逐题审核，未通过且一次修正后仍失败就返回错误，不能换成模型题来绕过审核。文档/网络资料均无法取得或不足时，可生成模型练习，`reference=null`，`generation.mode=model_fallback`，并保存“模型生成，未依据文档或联网资料核实”及原因。模型本身失败时仍返回错误，不保证降级一定成功。
-
-`generation.mode` 的其他取值为 `document`（仅文档）、`document_web`（文档与网页）、`web_fallback`（文档失败或不足后仅网页）；有依据模式保存真实片段及逐题关联。生成方式由实际采用的资料决定，不由模型自报。身份、归属、未就绪、内容违规、限流、题目格式和保存失败都不会触发模型兜底。未传 `doc_id` 的普通出题依然资料不足就暂停。
-
-部署前后端时需配套更新。旧题库缺少 `generation` 继续可读，不推断为模型兜底；新题库的生成方式、原因及引用快照随本机与云端历史保存，删除文档不会删除这些学习历史。
+未实现中途进度跨端同步、游客自动导入、头像上传、对外分享和部署方案。历史真实 API 验证与尚未验证事项见[验收记录索引](../docs/验收记录/README.md)。

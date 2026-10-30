@@ -1,9 +1,0 @@
-{
-  "passed": true,
-  "per_question_sources": 5,
-  "copy_payload_matches": true,
-  "clipboard_boundary": "mocked success and failure",
-  "copy_failure_feedback": true,
-  "legacy_labels": 5,
-  "runtime_exceptions": []
-}

@@ -1,4 +1,3 @@
-import importlib.util
 import logging
 import asyncio
 
@@ -7,16 +6,10 @@ import pytest
 
 from app.core.config import Settings
 from app.core.errors import AppError
-
-
-def provider_module():
-    assert importlib.util.find_spec("app.services.identity") is not None, "WeChat login provider is missing"
-    from app.services import identity
-    return identity
+from app.services import identity
 
 
 async def test_wechat_code_exchange_uses_server_credentials_once_and_logs_no_secrets(caplog):
-    identity = provider_module()
     requests = []
     async def upstream(request):
         requests.append(request)
@@ -47,7 +40,6 @@ async def test_wechat_code_exchange_uses_server_credentials_once_and_logs_no_sec
     ([], 503),
 ])
 async def test_wechat_errors_are_safe_and_never_reuse_code(response, status):
-    identity = provider_module()
     calls = 0
     async def upstream(request):
         nonlocal calls
@@ -64,7 +56,6 @@ async def test_wechat_errors_are_safe_and_never_reuse_code(response, status):
 
 @pytest.mark.parametrize("mode", ["timeout", "html", "http-error"])
 async def test_wechat_timeout_malformed_and_http_errors_are_safe(mode):
-    identity = provider_module()
     calls = 0
     async def upstream(request):
         nonlocal calls
@@ -82,7 +73,6 @@ async def test_wechat_timeout_malformed_and_http_errors_are_safe(mode):
 
 
 async def test_unconfigured_wechat_fails_without_external_request():
-    identity = provider_module()
     provider = identity.WechatIdentityProvider(Settings(_env_file=None))
     with pytest.raises(AppError) as exc:
         await provider.exchange("code")
@@ -91,14 +81,12 @@ async def test_unconfigured_wechat_fails_without_external_request():
 
 
 async def test_unconfigured_provider_creates_no_network_transport():
-    identity = provider_module()
     provider = identity.WechatIdentityProvider(Settings(_env_file=None))
     assert provider.client._transport.transport is None
     await provider.aclose()
 
 
 async def test_wechat_entire_exchange_has_a_bounded_total_timeout():
-    identity = provider_module()
     async def upstream(request):
         await asyncio.sleep(6)
         return httpx.Response(200, json={"openid": "wx-person", "session_key": "key"})

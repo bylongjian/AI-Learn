@@ -8,8 +8,6 @@ from app.llm.generation import ReliableGenerator
 from app.models.quiz import QuizRequest
 from app.services.document_parser import DocumentChunk
 from tests.factories import quiz_content, FixedKnowledge
-from tests.test_documents import documents
-from tests.test_user_repository import repository
 from tests.test_user_api import client_for, login, bearer
 from tests.test_generation import SequenceProvider
 from tests.test_grounded_quiz import grounded_content, review

@@ -8,7 +8,6 @@ from app.core.config import Settings
 from app.main import create_app
 from tests.factories import quiz_content, report_request, report_text, FixedKnowledge
 from tests.test_generation import GroundedSequenceProvider as SequenceProvider
-from tests.test_user_repository import repository
 
 
 @asynccontextmanager

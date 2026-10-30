@@ -1,129 +1,54 @@
-# OpenSpec 使用教程（超简单版）
+# 学习咩 · OpenSpec 使用教程
 
-> 用 OpenSpec 给「学习咩 · AI 闯关学习」项目扩展功能，傻子都能懂的 3 步教程。
+OpenSpec 用来保存“要做什么、为什么这样做、如何验收”，方便后续功能持续维护。这个仓库已经接入，不需要重新初始化；普通目录和文档整理也不必伪装成一个新功能变更。
 
----
+## 一、仓库里已有些什么
 
-## OpenSpec 是什么？（一句话）
+先读主规范了解已同步的行为，再读进行中的变更。代码、当前项目说明与尚未同步的变更需要一起核对，不能只看归档判断某个功能是否实现。
 
-OpenSpec 是一个帮你和 AI **先商量好要做什么，再动手写代码** 的工具。它会自动生成需求文档、设计方案和任务清单，让 AI 编码更靠谱。
-
----
-
-## 第一步：安装和初始化
-
-### 1. 安装 OpenSpec（全局安装一次就行）
-
-```bash
-npm install -g @fission-ai/openspec@latest
-```
-
-### 2. 在项目里初始化
-
-```bash
-cd "D:\桌面\简历与学习笔记\学习路线\项目代码\AI-Learn"
-openspec init --tools github-copilot
-```
-
-> 运行后会提示你选择配置，**一路回车选默认就行**。
->
-> `--tools github-copilot` 表示你用的是 VS Code 里的 GitHub Copilot。如果你还用 Cursor 可以写 `--tools github-copilot,cursor`。
-
-初始化完成后，项目里会多出一个 `openspec/` 文件夹：
-
-```
+```text
 openspec/
-├── specs/          ← 存放系统现有行为的规格说明
-├── changes/        ← 存放每次要改的需求（一个功能一个文件夹）
-└── config.yaml     ← 配置文件
+├── README.md            # 主规范、归档与参考资料的区别
+├── config.yaml          # 当前 schema: spec-driven
+├── specs/               # 已同步的行为规范
+└── changes/
+    └── archive/         # 当前项目自己的已完成变更
 ```
 
----
+知识库变更已于 2026-10-30 同步主规范并归档，目前没有进行中的变更。任务完成、主规范同步和归档分别核对，不能只看任务是否打勾；当前归档清单见 [OpenSpec 导航](../openspec/README.md)。
 
-## 第二步：提出一个新功能（核心操作！）
+## 二、先检查当前环境
 
-在 VS Code 的 Copilot Chat 中，输入：
+本机检查版本为 1.15.0。以下是在项目根目录运行的只读命令；若本机没有 CLI，先与维护者确认安装版本，不要为了阅读项目而自动初始化或升级。
 
-```
-/opsx:propose 增加用户学习数据统计看板
-```
-
-> 💡 `/opsx:propose` 后面跟你想做的功能描述，用中文就行。
-
-**AI 会自动帮你生成一整套文档：**
-
-```
-openspec/changes/增加用户学习数据统计看板/
-├── proposal.md     ← 为什么做、做什么（需求提案）
-├── specs/          ← 具体的需求规格
-├── design.md       ← 怎么做（技术设计）
-└── tasks.md        ← 任务清单（带 checkbox）
+```powershell
+openspec.cmd --version
+openspec.cmd list --json
+openspec.cmd status --help
+openspec.cmd validate --all --strict
+openspec.cmd validate --archived
 ```
 
-你可以检查这些文件，觉得不对就直接修改，改完再继续。
+macOS/Linux 或其他 shell 使用 `openspec`。创建新的进行中变更后，再用 `status --change` 查询其状态；已经归档的变更直接阅读 archive 下的资料，不再使用旧活动名称查询。CLI 参数以本机 `--help` 为准。
 
----
+## 三、开发一项功能
 
-## 第三步：让 AI 干活 + 归档
+一次变更围绕一个明确目标，先整理输入、输出、异常情况和验收，再按任务实现。不要同时引入另一套主流程来重复维护相同需求。
 
-### 3a. 让 AI 按任务清单写代码
+| 阶段 | 要完成什么 | 本仓入口 |
+| --- | --- | --- |
+| 提案 | 背景、范围、规格、设计、任务 | `openspec-propose` 技能或 `.github/prompts/opsx-propose.prompt.md` |
+| 实现 | 按 tasks 修改代码，执行相关测试 | `openspec-apply-change` 或 `opsx-apply.prompt.md` |
+| 更新 | 需求变化时更新当前变更 | `openspec-update-change` 或 `opsx-update.prompt.md` |
+| 同步 | 将已实现的 delta specs 合并到主规范 | `openspec-sync-specs` 或 `opsx-sync.prompt.md` |
+| 归档 | 检查任务、验证和同步状态，保存变更历史 | `openspec-archive-change` 或 `opsx-archive.prompt.md` |
 
-```
-/opsx:apply
-```
+在支持 OPSX 命令的宿主中，官方示例使用 `/opsx:propose`、`/opsx:apply`、`/opsx:sync`、`/opsx:archive`。本仓 Copilot prompt 文件名是 `opsx-propose` 等，具体输入以聊天界面展示的命令为准；Codex 可直接使用自然语言请求并读取已有技能，不依赖 Copilot 专属命令。
 
-AI 会按照 `tasks.md` 里的任务一个一个完成。
+## 四、验证、同步与归档
 
-### 3b. 完成后归档
+格式验证只证明规范格式满足工具要求，不能证明功能正确。完成实现后还需运行[维护指南](项目维护指南.md)中的代码检查，并留下实际体验结果。
 
-```
-/opsx:archive
-```
+同步会修改 `openspec/specs/`；归档会移动变更目录，并可能提示先同步。只有在确认实现、差异和验收范围后再执行，不能把“归档成功”理解成自动完成了所有验收。
 
-归档后，这次改动的规格会合并进 `openspec/specs/`，成为项目的正式文档。
-
----
-
-## 完整流程总结
-
-```
-/opsx:propose "你想做的功能"   →   检查生成的文档   →   /opsx:apply   →   /opsx:archive
-         提需求                    人工确认              AI 编码           归档
-```
-
-**就这 3 个命令，循环用就行了。**
-
----
-
-## 实战举例
-
-以下是本项目可以用 OpenSpec 扩展的功能示例：
-
-| 功能 | 命令 |
-|------|------|
-| 增加排行榜 | `/opsx:propose 增加用户答题排行榜功能` |
-| 支持视频输入 | `/opsx:propose 支持用户输入视频链接自动生成题目` |
-| 错题本 | `/opsx:propose 增加错题本功能，记录用户答错的题目` |
-| 学习提醒 | `/opsx:propose 增加每日学习提醒推送功能` |
-| 多人对战 | `/opsx:propose 增加好友PK答题对战模式` |
-
----
-
-## 常用 CLI 命令速查
-
-```bash
-openspec list              # 查看当前进行中的功能
-openspec show <功能名>      # 查看某个功能的详情
-openspec validate <功能名>  # 检查规格格式是否正确
-openspec view              # 打开交互式看板
-openspec update            # 更新 OpenSpec 到最新配置
-```
-
----
-
-## 注意事项
-
-1. **Node.js 版本要求 ≥ 20.19.0**，运行 `node -v` 检查
-2. 生成的文档不满意可以随时手动改，改完再 `/opsx:apply`
-3. 推荐用高推理能力的模型（如 Claude Opus、GPT-5 系列）效果更好
-4. 每次开始新功能前，建议清理一下聊天上下文，保持 AI 的注意力集中
+命令和行为已通过 Context7 核对[官方命令说明](https://github.com/Fission-AI/OpenSpec/blob/main/docs/commands.md)与[工作流说明](https://github.com/Fission-AI/OpenSpec/blob/main/docs/workflows.md)，具体可用参数另以本机 `--help` 为准。

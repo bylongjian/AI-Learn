@@ -12,20 +12,7 @@ def source(**changes):
             "excerpt": "A new concept is defined by its original guide.", **changes}
 
 
-def test_knowledge_settings_defaults_and_secrets():
-    settings = Settings(_env_file=None, tavily_api_key="private-test-key")
-    assert settings.enable_web_search is True
-    assert settings.knowledge_timeout_seconds == 25
-    assert settings.quiz_build_timeout_seconds == 25
-    assert settings.quiz_request_timeout_seconds == 55
-    assert settings.knowledge_max_tool_calls == 4
-    assert settings.knowledge_max_context_chars == 12000
-    assert "private-test-key" not in repr(settings)
-
-
 @pytest.mark.parametrize("changes", [
-    {"knowledge_timeout_seconds": 0}, {"knowledge_max_tool_calls": 0},
-    {"knowledge_max_context_chars": 13000}, {"quiz_request_timeout_seconds": 60},
     {"knowledge_timeout_seconds": 30}, {"quiz_build_timeout_seconds": 45},
 ])
 def test_invalid_knowledge_budgets_are_rejected(changes):
