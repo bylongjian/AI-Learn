@@ -1,0 +1,22 @@
+# Only dependency inputs, application code and migrations enter the build context.
+**
+!Dockerfile
+!.dockerignore
+!requirements.txt
+!app/
+!app/**
+!sql/
+!sql/*.sql
+!scripts/
+!scripts/init_db.py
+
+# Do not re-include generated files or private configuration under allowed folders.
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.env
+**/.env.*
+**/*.log
+**/*.log.*
+**/*.pem
+**/*.key

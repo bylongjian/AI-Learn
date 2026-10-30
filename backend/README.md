@@ -112,4 +112,10 @@ if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 
 限流保存在单个 API 进程内，默认每 IP 每 60 秒 20 次；登录另有独立限额。请求体默认 64KiB，文件上传使用 11MiB multipart 上限，文件本身仍为 10MiB。仅使用直接连接 IP，不信任任意转发头；内容词表也不等于完整语义审核。
 
-未实现中途进度跨端同步、游客自动导入、头像上传、对外分享和部署方案。历史真实 API 验证与尚未验证事项见[验收记录索引](../docs/验收记录/README.md)。
+未实现中途进度跨端同步、游客自动导入、头像上传和对外分享。历史真实 API 验证与尚未验证事项见[验收记录索引](../docs/验收记录/README.md)。
+
+## 六、微信云托管 Docker 配置
+
+使用本目录的 `Dockerfile` 与 `.dockerignore`，从项目根目录执行 `docker build -t ai-learn-backend:local ./backend`。平台构建目标目录为 backend，监听端口为 80；镜像默认 production、关闭开发登录，密钥通过运行环境注入，不复制本机 env 或 data。
+
+SQL 与 `scripts/init_db.py` 已包含在镜像中，迁移需显式执行 `python -m scripts.init_db`。本机尚未执行 Docker 构建；当前本地 Chroma 不能直接当作云托管持久数据，知识库正式上线前必须落实存储方案。官方要求、配置步骤及验证边界见[微信云托管部署说明](../docs/微信云托管部署指南.md)。
