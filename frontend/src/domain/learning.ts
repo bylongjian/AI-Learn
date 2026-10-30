@@ -29,6 +29,22 @@ export function isQuiz(value: unknown): value is Quiz {
     !text(value.user_input, 2000) || !Array.isArray(value.questions) || value.questions.length < 3 || value.questions.length > 5 ||
     !value.questions.every(isQuestion) || !unique(value.questions.map((q: Question) => q.id))) return false
   if (value.reference != null && !isReference(value.reference, value.questions)) return false
+  if (value.generation != null) {
+    const generation = value.generation
+    if (!object(generation) || !['document', 'document_web', 'web_fallback', 'model_fallback'].includes(generation.mode) ||
+      !safeId(generation.doc_id) || !text(generation.doc_name, 255) || !text(generation.message, 300) ||
+      (generation.reason !== null && !['document_insufficient', 'document_unavailable', 'web_insufficient', 'web_unavailable', 'preparation_timeout'].includes(generation.reason))) return false
+    if (generation.mode === 'model_fallback') {
+      if (value.reference != null || generation.reason === null) return false
+    } else {
+      if (!value.reference) return false
+      const kinds = new Set(value.reference.sources.map((source: any) => source.kind))
+      if (generation.mode === 'document' && (kinds.size !== 1 || !kinds.has('document'))) return false
+      if (generation.mode === 'document_web' && (kinds.size !== 2 || !kinds.has('document') || !kinds.has('web'))) return false
+      if (generation.mode === 'web_fallback' && (kinds.size !== 1 || !kinds.has('web'))) return false
+      if (value.reference.sources.some((source: any) => source.kind === 'document' && source.doc_id !== generation.doc_id)) return false
+    }
+  }
   return value.questions.filter((q: Question) => q.type === 'single').length === value.questions.length - 2 &&
     value.questions.filter((q: Question) => q.type === 'multiple').length === 1 &&
     value.questions.filter((q: Question) => q.type === 'judge').length === 1
@@ -45,6 +61,9 @@ function isReference(value: unknown, questions: Question[]): boolean {
       const url = /^(https?):\/\/([^/?#\s]+)(?:[/?#][^\s]*)?$/.exec(source.url)
       if (!url || url[2].includes('@') || source.url.includes('\\')) return false
       if (source.published_at != null && (!text(source.published_at, 64) || !/^\d{4}-\d\d-\d\d/.test(source.published_at) || !Number.isFinite(Date.parse(source.published_at)))) return false
+    } else if (source.kind === 'document') {
+      if (source.url != null || source.published_at != null || !safeId(source.doc_id) || !text(source.chunk_id, 300) ||
+        (source.page !== undefined && (!Number.isSafeInteger(source.page) || source.page < 1))) return false
     } else if (source.kind !== 'user_text' || source.url != null || source.published_at != null) return false
   }
   const sourceIds = value.sources.map((source: any) => source.id)

@@ -12,9 +12,9 @@ from tests.test_user_repository import repository
 
 
 @asynccontextmanager
-async def client_for(repository, *, provider=None, identity_provider=None, remote="127.0.0.1", **changes):
+async def client_for(repository, *, provider=None, identity_provider=None, documents_service=None, remote="127.0.0.1", **changes):
     settings = Settings(_env_file=".env.test", **{"app_env": "development", "dev_login_enabled": True, **changes})
-    app = create_app(settings, provider or SequenceProvider(quiz_content(), report_text()), identity_provider=identity_provider, knowledge_service=FixedKnowledge())
+    app = create_app(settings, provider or SequenceProvider(quiz_content(), report_text()), identity_provider=identity_provider, knowledge_service=FixedKnowledge(),documents_service=documents_service)
     async with app.router.lifespan_context(app):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app, client=(remote, 1000)), base_url="http://test") as client:
             yield client, app

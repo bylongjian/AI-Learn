@@ -94,6 +94,14 @@ async def initialize_schema(database: Database):
             if await cursor.fetchone() is None:
                 migration = Path(__file__).resolve().parent.parent / "sql" / "002_quiz_reference.sql"
                 await cursor.execute(migration.read_text(encoding="utf-8").strip().rstrip(";"))
+            knowledge_sql = Path(__file__).resolve().parent.parent / "sql" / "003_knowledge_base.sql"
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message="Table '.*' already exists", category=aiomysql.Warning)
+                await cursor.execute(knowledge_sql.read_text(encoding="utf-8").strip().rstrip(";"))
+            await cursor.execute("""SELECT COLUMN_NAME FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='quiz_sessions' AND COLUMN_NAME='generation'""")
+            if await cursor.fetchone() is None:
+                await cursor.execute("ALTER TABLE quiz_sessions ADD COLUMN generation JSON NULL")
 
 
 def utc(value):
@@ -150,11 +158,17 @@ class UserRepository:
         return await self.get_profile(user_id)
 
     async def save_quiz(self, user_id: str, quiz: Quiz):
-        async with self.database.connection() as conn:
+        async with self.database.connection(transaction=True) as conn:
             async with conn.cursor() as cursor:
-                await cursor.execute("""INSERT INTO quiz_sessions (quiz_id,user_id,title,summary,user_input,questions,`reference`)
-                    VALUES (%s,%s,%s,%s,%s,%s,%s)""", (quiz.quiz_id, user_id, quiz.title, quiz.summary, quiz.user_input,
-                            dump([q.model_dump() for q in quiz.questions]), dump(quiz.reference.model_dump()) if quiz.reference else None))
+                if quiz.generation is not None:
+                    await cursor.execute("SELECT status FROM kb_documents WHERE user_id=%s AND doc_id=%s FOR UPDATE", (user_id,quiz.generation.doc_id))
+                    row = await cursor.fetchone()
+                    if row is None or row[0] != "ready":
+                        raise AppError(40903, "文档已不可用，请刷新知识库", 409)
+                await cursor.execute("""INSERT INTO quiz_sessions (quiz_id,user_id,title,summary,user_input,questions,`reference`,generation)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""", (quiz.quiz_id, user_id, quiz.title, quiz.summary, quiz.user_input,
+                            dump([q.model_dump() for q in quiz.questions]), dump(quiz.reference.model_dump()) if quiz.reference else None,
+                            dump(quiz.generation.model_dump()) if quiz.generation else None))
 
     async def get_quiz(self, user_id: str, quiz_id: str):
         async with self.database.connection() as conn:
@@ -167,7 +181,8 @@ class UserRepository:
             raise AppError(40401, "未找到该练习", 404)
         quiz = {"quiz_id": row["quiz_id"], "source_type": "text", "title": row["title"], "summary": row["summary"],
                 "user_input": row["user_input"], "questions": json.loads(row["questions"]),
-                "reference": json.loads(row["reference"]) if row["reference"] else None}
+                "reference": json.loads(row["reference"]) if row["reference"] else None,
+                "generation": json.loads(row["generation"]) if row["generation"] else None}
         return {"quiz": quiz, "answer_records": json.loads(row["records"]) if row["records"] else [],
                 "report": json.loads(row["report"]) if row["report"] else None, "created_at": utc(row["created_at"])}
 

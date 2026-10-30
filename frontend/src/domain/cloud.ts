@@ -38,7 +38,7 @@ export function cloudDetailToSession(value: unknown, local?: Session): Session {
   if (value.report === null) {
     if (value.answer_records.length) throw invalid()
     if (local?.quiz.quiz_id === quiz.quiz_id) {
-      return quiz.reference && !local.quiz.reference ? { ...local, quiz } : local
+      return (quiz.reference && !local.quiz.reference) || (quiz.generation && !local.quiz.generation) ? { ...local, quiz } : local
     }
     return session
   }

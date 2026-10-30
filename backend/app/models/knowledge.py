@@ -3,18 +3,29 @@ from datetime import date, datetime, timezone
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator, model_serializer
 
 from app.models.base import StrictModel, Text
 
 
 class KnowledgeSource(StrictModel):
     id: str = Field(pattern=r"^s[1-5]$")
-    kind: Literal["web", "user_text"]
+    kind: Literal["web", "user_text", "document"]
     title: str = Field(min_length=1, max_length=300)
     url: str | None = Field(default=None, max_length=2000)
     published_at: str | None = Field(default=None, max_length=64)
     excerpt: str = Field(min_length=1, max_length=2000)
+    doc_id: str | None = None
+    chunk_id: str | None = None
+    page: int | None = Field(default=None,ge=1)
+
+    @model_serializer(mode='wrap')
+    def serialize_source(self,handler):
+        result = handler(self)
+        for key in ('doc_id','chunk_id','page'):
+            if result[key] is None:
+                result.pop(key)
+        return result
 
     @field_validator("published_at")
     @classmethod
@@ -28,8 +39,12 @@ class KnowledgeSource(StrictModel):
 
     @model_validator(mode="after")
     def source_kind(self):
-        if self.kind == "user_text" and (self.url is not None or self.published_at is not None):
+        if self.kind in {"user_text","document"} and (self.url is not None or self.published_at is not None):
             raise ValueError("User text has no independently verified URL or publication date")
+        if self.kind == 'document' and (not self.doc_id or not self.chunk_id):
+            raise ValueError('Document source requires its actual document and chunk identifiers')
+        if self.kind != 'document' and any(value is not None for value in (self.doc_id,self.chunk_id,self.page)):
+            raise ValueError('Only document sources have document metadata')
         if self.kind == "web" and not self.url:
             raise ValueError("Web evidence needs a URL")
         if self.kind == "web":

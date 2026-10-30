@@ -1,13 +1,14 @@
 import Taro from '@tarojs/taro'
 import { createApi } from './api'
 import { createAuthStore } from '../auth/store'
+import { uploadDocumentFile } from './document-upload'
 
 const AUTH_KEY = 'xueximie-auth-v1'
 let activeAuth: ReturnType<typeof createAuthStore> | undefined
 export const api = createApi(options => Taro.request(options), API_BASE_URL, {
   credentials: () => activeAuth?.credentials() || null,
   onUnauthorized: token => activeAuth?.expire(token),
-})
+}, uploadDocumentFile)
 export const localDevLogin = LOCAL_DEV_LOGIN && /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/?$/.test(API_BASE_URL)
 export const authStore = activeAuth = createAuthStore({
   read: () => Taro.getStorageSync(AUTH_KEY),

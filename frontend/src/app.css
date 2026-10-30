@@ -48,6 +48,8 @@ taro-button-core + taro-button-core { margin-top:0; }
 .review-copy { margin:12px 0; }
 .profile-identity { min-width:0; flex:1; overflow-wrap:anywhere; }
 .profile-edit { background:none; color:var(--brand); font-size:12px; padding:8px 0; min-height:44px; white-space:nowrap; }
+.profile-knowledge-entry { margin-top:24px; }
+.reference-meta { overflow-wrap:anywhere; }
 .user-avatar-image { width:43px; height:43px; border-radius:50%; }
 .account-controls { margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
 .account-mode,.account-copy,.account-total { color:var(--muted); font-size:11px; line-height:1.7; }

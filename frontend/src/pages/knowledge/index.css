@@ -1,0 +1,22 @@
+.knowledge-upload,.knowledge-card,.knowledge-login { margin:24px 0; padding:18px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+.knowledge-section-heading,.knowledge-document-heading { display:flex; align-items:center; gap:10px; }
+.knowledge-section-heading { justify-content:space-between; margin-top:20px; }
+.knowledge-section-heading .section-title { margin:0; }
+.knowledge-upload .knowledge-section-heading { margin:0 0 10px; }
+.knowledge-count,.knowledge-copy { font-size:13px; color:var(--muted); line-height:1.75; }
+.knowledge-upload .primary { margin-top:16px; }
+.knowledge-privacy,.knowledge-footer { margin-top:14px; font-size:12px; line-height:1.8; color:var(--muted); }
+.knowledge-document-title { flex:1; min-width:0; overflow-wrap:anywhere; font-size:15px; font-weight:600; }
+.knowledge-status { flex-shrink:0; font-size:12px; line-height:1.7; color:var(--muted); background:var(--canvas); border-radius:6px; padding:3px 7px; }
+.knowledge-status.ready { color:var(--green); background:var(--green-soft); }
+.knowledge-status.failed,.knowledge-status.delete_failed { color:var(--red); background:var(--red-soft); }
+.knowledge-card>.knowledge-copy { margin-top:10px; }
+.knowledge-topic { margin-top:16px; }
+.knowledge-topic-input { min-height:44px; padding:10px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--page); }
+.knowledge-actions { display:flex; gap:12px; margin-top:16px; align-items:center; }
+.knowledge-actions .primary { flex:1; }
+.knowledge-actions .text-action { min-width:60px; justify-content:center; }
+.knowledge-empty,.knowledge-login { text-align:center; padding:28px 14px; }
+.knowledge-empty>.icon,.knowledge-login>.icon { width:44px; height:44px; margin-bottom:12px; }
+.knowledge-progress { padding:14px; margin:16px 0; font-size:14px; line-height:1.8; border-radius:var(--radius); color:var(--brand); background:var(--brand-soft); }
+.knowledge-options .secondary { margin-top:10px; text-align:left; }

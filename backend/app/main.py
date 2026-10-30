@@ -19,20 +19,30 @@ from app.services.identity import WechatIdentityProvider
 from app.storage import Database, UserRepository
 from app.services.quiz import QuizService
 from app.services.report import ReportService
+from app.repositories.knowledge import KnowledgeRepository
+from app.services.documents import DocumentService
+from app.services.vectors import VectorStore
+from app.routes.knowledge import router as knowledge_router
+from app.services.rag import RagService
 
 
-def create_app(settings: Settings | None = None, provider: Provider | None = None, *, identity_provider=None, repository=None, knowledge_service=None) -> FastAPI:
+def create_app(settings: Settings | None = None, provider: Provider | None = None, *, identity_provider=None, repository=None, knowledge_service=None, documents_service=None) -> FastAPI:
     settings = settings if settings is not None else Settings()
     owned_provider = DeepSeekProvider(settings) if provider is None else None
     database = Database(settings) if repository is None else repository.database
     owned_identity = WechatIdentityProvider(settings) if identity_provider is None else None
+    documents = documents_service or DocumentService(settings,KnowledgeRepository(database),VectorStore(settings))
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         try:
+            if documents_service is None:
+                documents.start()
             yield
         finally:
             try:
+                if documents_service is None:
+                    await documents.aclose()
                 if repository is None:
                     await database.close()
             finally:
@@ -46,13 +56,15 @@ def create_app(settings: Settings | None = None, provider: Provider | None = Non
     app = FastAPI(title="学习咩 API", version="0.1.0", lifespan=lifespan)
     guard = ContentGuard(settings.blocked_terms)
     generator = ReliableGenerator(provider if provider is not None else owned_provider, settings, guard)
-    app.state.quiz_service = QuizService(generator, guard, knowledge_service)
+    rag = RagService(settings,generator,documents.vectors,model=owned_provider.llm if owned_provider is not None else None)
+    app.state.quiz_service = QuizService(generator, guard, knowledge_service,rag=rag)
     app.state.report_service = ReportService(generator, guard)
     app.state.settings = settings
     app.state.database = database
     app.state.user_repository = repository if repository is not None else UserRepository(database)
     app.state.identity_provider = identity_provider if identity_provider is not None else owned_identity
     app.state.report_locks = WeakValueDictionary()
+    app.state.documents = documents
 
     @app.exception_handler(TopicClarification)
     async def clarification_handler(request: Request, exc: TopicClarification):
@@ -73,11 +85,12 @@ def create_app(settings: Settings | None = None, provider: Provider | None = Non
 
     app.include_router(router)
     app.include_router(user_router)
+    app.include_router(knowledge_router)
     if settings.dev_login_enabled and settings.app_env == "development":
         app.include_router(dev_router)
     app.add_middleware(RequestGuardMiddleware, settings=settings)
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins,
-                       allow_methods=["GET", "POST", "PUT", "OPTIONS"], allow_headers=["content-type", "authorization"],
+                       allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], allow_headers=["content-type", "authorization"],
                        expose_headers=["X-Learning-User"])
     return app
 

@@ -31,3 +31,6 @@ Desktop.ini
 .cache/
 .coverage
 htmlcov/
+backend/data/
+.playwright-cli/
+output/playwright/

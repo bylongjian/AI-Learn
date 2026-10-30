@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 from app.models.base import StrictModel, Text
 from app.models.knowledge import QuestionSources, QuizReference
+from app.models.document import QuizGeneration
 
 Choice = Literal["A", "B", "C", "D"]
 Difficulty = Literal["easy", "medium", "hard"]
@@ -13,6 +14,7 @@ class QuizRequest(StrictModel):
     question_count: int = Field(default=5, ge=3, le=5)
     difficulty: Literal["mixed", "easy", "medium", "hard"] = "mixed"
     topic_context: str | None = Field(default=None, min_length=1, max_length=200)
+    doc_id: str | None = Field(default=None,pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
 
     @field_validator("user_input")
     @classmethod
@@ -77,6 +79,7 @@ class Quiz(QuizContent):
     source_type: Literal["text"] = "text"
     user_input: Text
     reference: QuizReference | None = None
+    generation: QuizGeneration | None = None
 
     @model_validator(mode="after")
     def reference_matches_questions(self):

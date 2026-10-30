@@ -113,7 +113,7 @@ AI 只生成三条总结、1–5 条建议和一句鼓励，不能修改统计�
 ./.venv/Scripts/python.exe -m pip check
 ```
 
-当前核心回归为 175 项通过，覆盖资料获取、领域确认、逐题依据检查、来源保存、确定性计分、账号隔离及 MySQL 幂等结算。自动化测试替换外部模型、检索和微信 HTTPS 边界，不调用付费接口；MySQL 仓储使用真实独立测试库，配置与安全规则见下文。真实 API 验收单独记录在 [AI 出题优化验收记录](../docs/AI出题优化验收记录.md)。
+当前核心回归为 213 项通过，覆盖资料获取、领域确认、逐题依据检查、来源保存、私有文档处理与 RAG 降级、确定性计分、账号隔离及 MySQL 幂等结算。自动化测试替换外部模型、检索和微信 HTTPS 边界，不调用付费接口；MySQL 仓储使用真实独立测试库，配置与安全规则见下文。历史真实 API 验收见 [AI 出题优化验收记录](../docs/AI出题优化验收记录.md)，本次知识库验证范围及手工步骤见 [知识库 RAG 验收记录](../docs/知识库RAG验收记录.md)。
 
 ## 用户、登录和云端练习
 
@@ -169,3 +169,42 @@ IP 限流仅在本进程内保存，默认最多 1024 个客户端、每 IP 每 
 生产环境如需多实例共享限流、追踪或日志平台，应在后续范围中设计。
 
 参考：[DeepSeek JSON mode](https://api-docs.deepseek.com/guides/json_mode/)、[LangChain DeepSeek](https://docs.langchain.com/oss/python/integrations/chat/deepseek)。
+
+## 私有知识库：数据库与运行准备
+
+文档记录保存在 MySQL，检索片段与向量保存在本地 Chroma。部署时使用一个 API worker，不能让多个进程同时写同一个 Chroma 目录；独立的文件解析进程不连接 Chroma。
+
+先安装锁定依赖，再配置 `.env.example` 中的 `DASHSCOPE_API_KEY` 和 `DASHSCOPE_BASE_URL`，地址从百炼控制台复制，必须与 Key 的地域和业务空间匹配。默认模型 `text-embedding-v4`、1024 维；示例文件不含可用密钥或虚构业务空间。未配置向量化时不能上传新文档，普通学习仍按原规则运行。
+
+从 `backend` 运行 `./.venv/Scripts/python.exe -m scripts.init_db`，初始化命令会创建 `sql/003_knowledge_base.sql` 的文档表，并为旧题库增加可空 `generation` 字段，重复执行不会清空题库。API 启动不自动建表。独立测试库仍必须以 `_test` 结尾。
+
+`CHROMA_PERSIST_DIR` 默认 `backend/data/chroma`，`KB_UPLOAD_DIR` 默认 `backend/data/uploads`；相对路径始终以 backend 为基准。这些目录已排除 Git，不能作为公开静态目录提供。备份前停止业务写入，同时备份 MySQL 与 Chroma 目录；不能只恢复其中一份。改变 Embedding 模型、维度或地域地址后，旧文档需要删除重传，不能用新向量查询旧索引。
+
+知识库支持 PDF、DOCX、Markdown 和 TXT，文本请保存为 UTF-8（允许 BOM）。PDF 必须能复制文字且无需密码，图片扫描件不做 OCR；DOCX 只读取文字，不保证复杂表格布局。每段最多 1000 字符、重叠 150 字符；PDF 保留实际页码，其他格式不编造页码。文字解析由可终止的子进程完成，原文件解析后即删除，中间片段文件在向量化结束或失败时清理。
+
+### 文档接口与处理状态
+
+以下接口全部要求有效 Bearer 登录；上传与开始处理分开，HTTP 202 只表示已接受，不表示解析完成。默认每人最多 10 篇、每篇 10MB，失败和未彻底删除的记录仍占名额；上传复用现有 IP 频率保护，没有每日次数额度。
+
+| 接口 | 操作与结果 |
+| --- | --- |
+| `POST /api/v1/knowledge/documents` | multipart 的单文件字段 `file`，可选 `file_name`（最多 255 字符，用于微信原文件名），返回文档项和 `processing` |
+| `GET /api/v1/knowledge/documents` | 返回 `items/limit/max_file_bytes`，只列本人文档 |
+| `GET /api/v1/knowledge/documents/{doc_id}` | 返回状态、片段数和安全的失败提示 |
+| `DELETE /api/v1/knowledge/documents/{doc_id}` | 返回 202 和 `deleting`；清理完成后查询为 404 |
+
+状态为 `processing/ready/failed/deleting/delete_failed`，只有 `ready` 可以开始闯关。文件处理含排队最多 180 秒；后端重启后中断任务标成失败，不自动重新消耗向量化额度。删除先禁止检索，清理不全则显示 `delete_failed`，可再次 DELETE 重试；已生成的题库、报告和引用快照保留。恢复任务每 30 秒重试待清理内容。
+
+上传路径单独使用 11MiB multipart 流式请求限制，文件实际大小仍为 10MiB；原有 JSON 请求保持 64KiB。`40101` 表示需登录，`40401` 表示文档不存在或不属于自己，`41301` 表示超大，`40903` 表示文档未就绪，`40904` 表示文档名额已满；配置及存储故障返回安全的 503。接口不会返回内部路径、密钥或外部服务原始错误。
+
+### 从文档出题与模型兜底
+
+在原有 `POST /api/v1/quiz/generate` 请求中增加 `doc_id` 即可使用自己的就绪文档；`user_input` 仍填写具体学习主题，题量和难度规则沿用现有接口。先检查登录、文档归属和状态，再检索文档，不恢复旧归档的异步出题 API。
+
+顺序是文档检索→联网补充→模型兜底。文档和充分性判断最多先用 8 秒，全部资料准备共用 25 秒；生成与依据审核另用 25 秒，含保存的请求仍最多 55 秒。检索工具总计最多四次；公开搜索参数由服务基于学习主题固定，文档原文不进入 Tavily 查询。
+
+有资料依据的题目继续逐题审核，未通过且一次修正后仍失败就返回错误，不能换成模型题来绕过审核。文档/网络资料均无法取得或不足时，可生成模型练习，`reference=null`，`generation.mode=model_fallback`，并保存“模型生成，未依据文档或联网资料核实”及原因。模型本身失败时仍返回错误，不保证降级一定成功。
+
+`generation.mode` 的其他取值为 `document`（仅文档）、`document_web`（文档与网页）、`web_fallback`（文档失败或不足后仅网页）；有依据模式保存真实片段及逐题关联。生成方式由实际采用的资料决定，不由模型自报。身份、归属、未就绪、内容违规、限流、题目格式和保存失败都不会触发模型兜底。未传 `doc_id` 的普通出题依然资料不足就暂停。
+
+部署前后端时需配套更新。旧题库缺少 `generation` 继续可读，不推断为模型兜底；新题库的生成方式、原因及引用快照随本机与云端历史保存，删除文档不会删除这些学习历史。

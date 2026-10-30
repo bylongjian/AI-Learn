@@ -24,7 +24,7 @@ async def repository():
     await initialize_schema(database)
     async with database.connection() as conn:
         async with conn.cursor() as cursor:
-            for table in ("reports", "answer_records", "quiz_sessions", "users"):
+            for table in ("reports", "answer_records", "quiz_sessions", "kb_documents", "users"):
                 await cursor.execute(f"DELETE FROM {table}")
     yield UserRepository(database)
     await database.close()

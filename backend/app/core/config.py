@@ -1,4 +1,5 @@
 from typing import Literal
+from pathlib import Path
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -23,6 +24,21 @@ class Settings(BaseSettings):
     generation_retries: int = Field(default=1, ge=0, le=2)
     tavily_api_key: SecretStr | None = None
     enable_web_search: bool = True
+    dashscope_api_key: SecretStr | None = None
+    dashscope_base_url: str = ""
+    dashscope_embedding_model: str = "text-embedding-v4"
+    kb_embedding_dimensions: int = Field(default=1024, ge=64, le=2048)
+    chroma_persist_dir: Path = Path(__file__).resolve().parents[2] / "data/chroma"
+    kb_upload_dir: Path = Path(__file__).resolve().parents[2] / "data/uploads"
+    kb_max_documents_per_user: int = Field(default=10, ge=1, le=10)
+    kb_max_file_size_mb: int = Field(default=10, ge=1, le=10)
+    kb_process_timeout_seconds: float = Field(default=180, gt=0, le=180)
+    kb_retrieval_timeout_seconds: float = Field(default=8, gt=0, le=8)
+    kb_chunk_size: int = Field(default=1000, ge=100, le=1000)
+    kb_chunk_overlap: int = Field(default=150, ge=0)
+    kb_retrieve_top_k: int = Field(default=4, ge=1, le=5)
+    kb_embedding_batch_size: int = Field(default=2, ge=1, le=10)
+    kb_process_concurrency: int = Field(default=2, ge=1, le=2)
     knowledge_timeout_seconds: float = Field(default=25, gt=0, le=45)
     quiz_build_timeout_seconds: float = Field(default=25, gt=0, le=45)
     quiz_request_timeout_seconds: float = Field(default=55, gt=0, le=55)
@@ -46,6 +62,24 @@ class Settings(BaseSettings):
         if self.knowledge_timeout_seconds + self.quiz_build_timeout_seconds >= self.quiz_request_timeout_seconds:
             raise ValueError("Quiz stages must leave time for storage within the request deadline")
         return self
+
+    @model_validator(mode="after")
+    def validate_chunks(self):
+        if self.kb_chunk_overlap >= self.kb_chunk_size:
+            raise ValueError("Chunk overlap must be smaller than chunk size")
+        return self
+
+    @field_validator("chroma_persist_dir", "kb_upload_dir")
+    @classmethod
+    def knowledge_path(cls, value: Path) -> Path:
+        return (Path(__file__).resolve().parents[2] / value).resolve()
+
+    @field_validator("dashscope_base_url")
+    @classmethod
+    def embedding_url(cls, value: str) -> str:
+        if value and (not value.startswith("https://") or "{" in value):
+            raise ValueError("Set a real HTTPS Model Studio workspace URL")
+        return value.rstrip("/")
 
     @field_validator("deepseek_base_url")
     @classmethod

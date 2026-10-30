@@ -4,6 +4,7 @@ import { Text, View } from '@tarojs/components'
 import AppShell from '../../components/AppShell'
 import ScoreRing from '../../components/ScoreRing'
 import QuestionReferences from '../../components/QuestionReferences'
+import GenerationNotice from '../../components/GenerationNotice'
 import { Btn, Empty, Failure, goRoot, Loading, newTopic } from '../../components/common'
 import { getAnswerRecord, getStats } from '../../domain/learning'
 import { authStore } from '../../services/client'
@@ -57,6 +58,7 @@ export default function ReportPage() {
   return <AppShell onBack={back} backLabel={backLabel}>
     {phase === 'loading' ? <Loading report onCancel={back} cancelLabel={backLabel} /> : phase === 'failed' || !report ? <Failure report detail={`${session.quiz.title}\n答对 ${stats.correct} / ${stats.total} 题 · ${stats.xp} XP`} error={error} onRetry={generate} onCancel={back} cancelLabel={backLabel} /> : <>
       <View className='page-title'>学习报告</View><View className='page-subtitle'>{session.quiz.title} · {stats.total} 道题</View>
+      <GenerationNotice quiz={session.quiz} />
       <View className='report-score'><ScoreRing accuracy={stats.accuracy} /><View className='score-copy'><View className='score-title'>本轮正确率</View><View className='score-count'>答对 {stats.correct} / {stats.total} 题</View><View className='report-xp'>+{stats.xp} XP</View></View></View>
       <View className='summary-section'><View className='section-title'>知识总结</View><View className='knowledge-summary'>{report.three_line_summary.map((line, i) => <View className='summary-item' key={i}><Text className='summary-number'>{i + 1}</Text><Text>{line}</Text></View>)}</View></View>
       <View className='weak-section'><View className='section-title'>{report.weak_points.length ? '待巩固' : '本轮全部答对'}</View><View className='weak-copy'>{report.weak_points.length ? report.weak_points.join('、') : '这些知识点都答对了，继续探索新的主题吧。'}</View></View>

@@ -18,10 +18,17 @@ export interface Quiz {
   user_input: string
   questions: Question[]
   reference?: QuizReference | null
+  generation?: QuizGeneration | null
+}
+export interface QuizGeneration {
+  mode: 'document' | 'document_web' | 'web_fallback' | 'model_fallback'
+  doc_id: string; doc_name: string; reason: 'document_insufficient' | 'document_unavailable' | 'web_insufficient' | 'web_unavailable' | 'preparation_timeout' | null
+  message: string
 }
 export interface KnowledgeSource {
-  id: string; kind: 'web' | 'user_text'; title: string; url: string | null
+  id: string; kind: 'web' | 'user_text' | 'document'; title: string; url: string | null
   published_at: string | null; excerpt: string
+  doc_id?: string; chunk_id?: string; page?: number
 }
 export interface QuizReference {
   topic: string; retrieved_at: string; sources: KnowledgeSource[]

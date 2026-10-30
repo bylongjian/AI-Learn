@@ -331,7 +331,7 @@ class KnowledgeService:
         reviews = {review.source_id: review for review in decision.reviews}
         if set(reviews) != {source.id for source in sources} or len(reviews) != len(decision.reviews):
             raise insufficient()
-        text_only = all(source.kind == "user_text" for source in sources)
+        text_only = all(source.kind in {"user_text","document"} for source in sources)
         origins = {reviews[source.id].independent_origin.strip().casefold() for source in sources if source.kind == "web"}
         domains = {urlsplit(source.url).hostname for source in sources if source.kind == "web"}
         if not text_only and not any(reviews[source.id].primary for source in sources if source.kind == "web") and (len(origins) < 2 or len(domains) < 2):

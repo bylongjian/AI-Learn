@@ -56,6 +56,7 @@ export default function Profile() {
       {!reportRows.length && (!user || (!cloud.deviceRows.length && history.loaded && !history.loading && !history.error)) && <Empty title='完成一关，就有一份收获' copy='你的学习报告会出现在这里。' action='开始第一轮学习' symbol='document' />}</View>
     {user && <View className='account-total'>累计答对 {user.correct_count} 题</View>}
     {!!reportRows.length && <View className='profile-home'><Btn className='text-action center-action' onClick={newTopic}>去闯关 <Icon name='arrow' tone='brand' /></Btn></View>}<View className='local-note'>{user ? '账号记录保存在云端，未完成进度保留在本机' : storageFailed ? '本次记录仅在当前页面保留' : '记录保存在当前设备'}</View>
+    <View className='profile-knowledge-entry'><Btn className='secondary' onClick={() => { void Taro.navigateTo({ url: '/pages/knowledge/index' }) }}><Icon name='book' tone='brand' />我的知识库 <Icon name='arrow' tone='brand' /></Btn></View>
     <AccountControls />
   </AppShell>
 }

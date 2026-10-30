@@ -19,7 +19,13 @@ async def health():
 async def generate_quiz(payload: QuizRequest, request: Request, response: Response, identity: Identity | None = Depends(optional_identity)):
     try:
         async with asyncio.timeout(request.app.state.settings.quiz_request_timeout_seconds):
-            quiz = await request.app.state.quiz_service.generate(payload)
+            if payload.doc_id is not None:
+                if identity is None:
+                    raise AppError(40101,"文档出题需要登录，请重新登录",401)
+                document = await request.app.state.documents.repository.get(identity.user_id,payload.doc_id,ready=True)
+                quiz = await request.app.state.quiz_service.generate(payload,document=document)
+            else:
+                quiz = await request.app.state.quiz_service.generate(payload)
             if identity is not None:
                 await request.app.state.user_repository.save_quiz(identity.user_id, quiz)
                 response.headers["X-Learning-User"] = identity.user_id

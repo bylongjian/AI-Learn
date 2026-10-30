@@ -7,6 +7,7 @@ import { advanceSession, getAnswerRecord, getStats, submitAnswer } from '../../d
 import type { OptionKey } from '../../domain/types'
 import { learningStore, useLearningStore } from '../../storage'
 import QuestionReferences from '../../components/QuestionReferences'
+import GenerationNotice from '../../components/GenerationNotice'
 
 export default function QuizPage() {
   const { params } = useRouter(); const { saved, storageFailed } = useLearningStore()
@@ -27,6 +28,7 @@ export default function QuizPage() {
   const overlay = exitOpen && <View className='screen-overlay'><View className='screen-dialog'><View className='dialog-title'>先休息一下？</View><View className='dialog-copy'>{storageFailed ? '本轮进度会保留在当前页面中，可以到题库继续学习。' : '本轮进度会保存在题库中，下次可以从这里继续。'}</View><Btn onClick={() => setExitOpen(false)}>继续答题</Btn><Btn className='secondary' onClick={() => { void goRoot('library') }}>退出本轮</Btn></View></View>
   return <AppShell onBack={() => setExitOpen(true)} overlay={overlay}>
     <View className='quiz-heading'><View className='page-title'>{session.quiz.title}</View><Text className='quiz-xp'>{stats.xp} XP</Text></View>
+    <GenerationNotice quiz={session.quiz} />
     <View className='progress-track'><View className='progress-value' style={{ width: `${stats.answered / stats.total * 100}%` }} /></View>
     <View className='question-meta'><Text>第 {session.current_index + 1} / {stats.total} 题 · {{ single: '单选题', multiple: '多选题', judge: '判断题' }[q.type]}</Text>{q.type === 'multiple' && !record && <Text>可选择多个答案</Text>}</View>
     <View className='question-stem'>{q.stem}</View><View className='answer-options'>{q.options.map(option => {
